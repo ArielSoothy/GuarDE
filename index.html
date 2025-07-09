@@ -157,12 +157,19 @@ activated_users AS (
                 </div>
 
                 <div class="interactive-demo">
-                    <h3>Interactive Demo</h3>
+                    <h3>Step-by-Step Query Execution</h3>
                     <div class="demo-controls">
-                        <button class="btn btn-primary" onclick="runAttributionQuery()">Run Attribution Query</button>
-                        <button class="btn btn-secondary" onclick="showSampleData()">Show Sample Data</button>
+                        <button class="btn btn-primary" onclick="runStep(1)">Step 1: Parse UTM Parameters</button>
+                        <button class="btn btn-primary" onclick="runStep(2)">Step 2: Find Activated Users</button>
+                        <button class="btn btn-primary" onclick="runStep(3)">Step 3: Attribution Window</button>
+                        <button class="btn btn-primary" onclick="runStep(4)">Step 4: Final Attribution</button>
+                        <button class="btn btn-secondary" onclick="runStep(5)">Show Complete Results</button>
                     </div>
-                    <div id="attribution-results" class="results-table"></div>
+                    <div id="step-results" class="step-results">
+                        <div class="step-explanation">
+                            <p>Click the buttons above to see each step of the attribution query execution with real results.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -187,15 +194,25 @@ activated_users AS (
                 </div>
 
                 <div class="dashboard-demo">
-                    <h3>Live CPA Dashboard</h3>
+                    <h3>CPA Dashboard Query Results</h3>
                     <div class="dashboard-controls">
                         <select id="granularity-select">
-                            <option value="daily">Daily CPA</option>
-                            <option value="campaign">Campaign CPA</option>
-                            <option value="source">Source CPA</option>
-                            <option value="ad">Ad Level CPA</option>
+                            <option value="daily">Daily CPA Query</option>
+                            <option value="campaign">Campaign CPA Query</option>
+                            <option value="source">Source CPA Query</option>
+                            <option value="ad">Ad Level CPA Query</option>
                         </select>
-                        <button class="btn btn-primary" onclick="updateDashboard()">Update Dashboard</button>
+                        <button class="btn btn-primary" onclick="updateDashboard()">Run Query & Update</button>
+                        <button class="btn btn-secondary" onclick="showCPAQuerySteps()">Show Query Steps</button>
+                    </div>
+                    
+                    <div id="cpa-query-results" class="cpa-query-results">
+                        <div class="query-explanation">
+                            <h4>CPA Dashboard Preparation Table</h4>
+                            <p>Select a granularity level above to see the actual SQL query results with spend, activations, and CPA calculations.</p>
+                            <code>SELECT date, source, campaign_name, SUM(total_spend) as spend, SUM(activations) as activations, 
+SUM(total_spend)/NULLIF(SUM(activations),0) as cpa FROM cpa_dashboard_table GROUP BY...</code>
+                        </div>
                     </div>
                     
                     <div class="dashboard-grid">

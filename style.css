@@ -276,6 +276,120 @@ body {
     display: flex;
     gap: 1rem;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.step-results {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 300px;
+}
+
+.step-result {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-description {
+    background: #e8f4f8;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.step-description code {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.9rem;
+    display: block;
+    margin-top: 0.5rem;
+    overflow-x: auto;
+}
+
+.step-explanation {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+}
+
+/* Source and status styling */
+.source-google { 
+    background: #4285f4; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.source-facebook { 
+    background: #1877f2; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.source-linkedin { 
+    background: #0077b5; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.source-twitter { 
+    background: #1da1f2; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.source-organic { 
+    background: #28a745; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.touch-marketing { 
+    background: #fd7e14; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.touch-organic { 
+    background: #6f42c1; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.journey-single-touch { 
+    background: #17a2b8; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.journey-multi-touch { 
+    background: #dc3545; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
 }
 
 .results-table {
@@ -327,6 +441,158 @@ body {
     flex: 1;
     position: relative;
     min-height: 250px;
+}
+
+.cpa-query-results {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    min-height: 300px;
+}
+
+.cpa-query-result {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.query-description {
+    background: #e8f4f8;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #4CAF50;
+}
+
+.query-description code {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.query-explanation {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.query-explanation code {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.cpa-query-steps {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.query-step {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.query-step h5 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.query-step code {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+/* Performance status styling */
+.performance-excellent { 
+    background: #28a745; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.performance-good { 
+    background: #17a2b8; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.performance-average { 
+    background: #ffc107; 
+    color: #212529; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.performance-poor { 
+    background: #dc3545; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.efficiency-high { 
+    background: #28a745; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.efficiency-medium { 
+    background: #ffc107; 
+    color: #212529; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.efficiency-low { 
+    background: #dc3545; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
 }
 
 .dashboard-card h4 {
