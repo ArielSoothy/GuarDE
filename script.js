@@ -117,6 +117,12 @@ function initializeCharts() {
                             }
                         }
                     }
+                },
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10
+                    }
                 }
             }
         });
@@ -163,6 +169,12 @@ function initializeCharts() {
                             drawOnChartArea: false,
                         },
                     }
+                },
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10
+                    }
                 }
             }
         });
@@ -196,6 +208,12 @@ function initializeCharts() {
                                 return value + '%';
                             }
                         }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10
                     }
                 }
             }

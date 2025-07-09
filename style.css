@@ -318,6 +318,15 @@ body {
     padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid #e9ecef;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card .chart-container {
+    flex: 1;
+    position: relative;
+    min-height: 250px;
 }
 
 .dashboard-card h4 {
@@ -327,7 +336,8 @@ body {
 
 .dashboard-card canvas {
     max-width: 100%;
-    height: 200px;
+    height: 250px !important;
+    max-height: 250px;
 }
 
 /* Optimization Section */
@@ -380,6 +390,12 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     margin-bottom: 3rem;
+}
+
+.performance-comparison canvas {
+    max-width: 100%;
+    height: 300px !important;
+    max-height: 300px;
 }
 
 .projection-grid {

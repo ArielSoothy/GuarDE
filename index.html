@@ -201,11 +201,15 @@ activated_users AS (
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
                             <h4>CPA Trend</h4>
-                            <canvas id="cpa-chart"></canvas>
+                            <div class="chart-container">
+                                <canvas id="cpa-chart"></canvas>
+                            </div>
                         </div>
                         <div class="dashboard-card">
                             <h4>Spend vs Activations</h4>
-                            <canvas id="spend-chart"></canvas>
+                            <div class="chart-container">
+                                <canvas id="spend-chart"></canvas>
+                            </div>
                         </div>
                         <div class="dashboard-card">
                             <h4>Top Performers</h4>
@@ -258,7 +262,9 @@ activated_users AS (
 
                 <div class="performance-comparison">
                     <h3>Performance Comparison</h3>
-                    <canvas id="performance-chart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
                 </div>
 
                 <div class="scalability-projection">
