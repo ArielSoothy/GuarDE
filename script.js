@@ -17,17 +17,18 @@ function initializeMockData() {
         const source = isMarketing ? sources[Math.floor(Math.random() * sources.length)] : 'organic';
         const campaign = isMarketing ? campaigns[Math.floor(Math.random() * campaigns.length)] : null;
         
+        const adsetId = `adset_${Math.floor(Math.random() * 20)}`;
+        const adId = `ad_${Math.floor(Math.random() * 50)}`;
+        
         mockData.sessions.push({
             session_id: `sess_${i.toString().padStart(6, '0')}`,
             user_id: `user_${Math.floor(Math.random() * 500).toString().padStart(4, '0')}`,
             device_type: devices[Math.floor(Math.random() * devices.length)],
-            session_start_time: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            session_start_time: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
             referrer_url: isMarketing ? 
-                `https://guard.io/?utm_source=${source}&utm_campaign=${campaign}&utm_adset=adset_${Math.floor(Math.random() * 20)}&utm_ad=ad_${Math.floor(Math.random() * 50)}` :
+                `https://guard.io/?utm_source=${source}&utm_campaign=${campaign}&utm_adset=${adsetId}&utm_ad=${adId}` :
                 'https://guard.io/',
-            is_activated: Math.random() > 0.95 ? 1 : 0,
-            source: source,
-            campaign_id: campaign
+            is_activated: Math.random() > 0.95 ? 1 : 0
         });
     }
     
@@ -266,7 +267,7 @@ function populateTable(tableName) {
     const headers = Object.keys(data[0]);
     let tableHTML = '<thead><tr>';
     headers.forEach(header => {
-        tableHTML += `<th>${header.replace('_', ' ').toUpperCase()}</th>`;
+        tableHTML += `<th>${header}</th>`;
     });
     tableHTML += '</tr></thead><tbody>';
     
