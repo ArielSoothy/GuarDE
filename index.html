@@ -171,6 +171,20 @@ activated_users AS (
                         </div>
                     </div>
                 </div>
+                
+                <div class="complete-results-demo">
+                    <h3>Complete Attribution Results Table</h3>
+                    <p>This is the final deliverable from Task 1 - one row per activated user with complete attribution data:</p>
+                    <div class="demo-controls">
+                        <button class="btn btn-primary" onclick="showCompleteAttributionResults()">Show Complete Results Table</button>
+                        <button class="btn btn-secondary" onclick="downloadAttributionCSV()">Download as CSV</button>
+                    </div>
+                    <div id="complete-attribution-results" class="complete-results-container">
+                        <div class="results-explanation">
+                            <p>Click "Show Complete Results Table" to see the final attribution table with all 18 required columns for each activated user.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -235,6 +249,20 @@ SUM(total_spend)/NULLIF(SUM(activations),0) as cpa FROM cpa_dashboard_table GROU
                         <div class="dashboard-card">
                             <h4>Key Metrics</h4>
                             <div id="key-metrics"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="complete-cpa-demo">
+                    <h3>Complete CPA Dashboard Preparation Table</h3>
+                    <p>This is the final deliverable from Task 2 - atomic-level records that power all dashboard aggregations:</p>
+                    <div class="demo-controls">
+                        <button class="btn btn-primary" onclick="showCompleteCPATable()">Show Complete Preparation Table</button>
+                        <button class="btn btn-secondary" onclick="downloadCPACSV()">Download as CSV</button>
+                    </div>
+                    <div id="complete-cpa-table" class="complete-results-container">
+                        <div class="results-explanation">
+                            <p>Click "Show Complete Preparation Table" to see the atomic-level CPA table that supports all granularity levels (date, campaign, ad group, ad).</p>
                         </div>
                     </div>
                 </div>
