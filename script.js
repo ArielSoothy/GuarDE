@@ -897,9 +897,9 @@ FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY ad_cpa ASC;</c
 
 // Helper functions for business logic explanations
 function getTrendExplanation(row, index, data) {
-    if (index === data.length - 1) return "Latest data";
+    if (index === 0) return "First day - no comparison";
     
-    const previousCPA = data[index + 1].cpa;
+    const previousCPA = data[index - 1].cpa;
     const change = ((row.cpa - previousCPA) / previousCPA * 100).toFixed(1);
     
     if (row.trend === '📈') {
@@ -907,7 +907,7 @@ function getTrendExplanation(row, index, data) {
     } else if (row.trend === '📉') {
         return `CPA decreased by ${Math.abs(change)}%`;
     } else {
-        return `CPA stable (${change}% change)`;
+        return `CPA stable (${Math.abs(change)}% change)`;
     }
 }
 
@@ -940,8 +940,8 @@ function getEfficiencyExplanation(efficiency) {
 // Data generation functions
 function generateDailyCPAData() {
     const data = [];
-    let previousCPA = 50; // Starting CPA
     
+    // Generate data first
     for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
@@ -949,24 +949,34 @@ function generateDailyCPAData() {
         const activations = Math.floor(Math.random() * 40) + 20;
         const cpa = spend / activations;
         
-        // Determine trend based on actual CPA comparison
-        let trend = '➡️';
-        if (i < 6) { // Not the first day
-            const change = ((cpa - previousCPA) / previousCPA);
-            if (change > 0.05) trend = '📈';
-            else if (change < -0.05) trend = '📉';
-        }
-        
         data.push({
             date: date.toLocaleDateString(),
             spend: spend,
             activations: activations,
             cpa: cpa,
-            trend: trend
+            trend: '➡️'  // Default, will be updated
         });
-        
-        previousCPA = cpa;
     }
+    
+    // Now calculate trends based on actual data
+    for (let i = 0; i < data.length; i++) {
+        if (i === 0) {
+            data[i].trend = '➡️';  // First day has no comparison
+        } else {
+            const currentCPA = data[i].cpa;
+            const previousCPA = data[i - 1].cpa;
+            const change = ((currentCPA - previousCPA) / previousCPA);
+            
+            if (change > 0.05) {
+                data[i].trend = '📈';  // CPA increased (worse)
+            } else if (change < -0.05) {
+                data[i].trend = '📉';  // CPA decreased (better)
+            } else {
+                data[i].trend = '➡️';  // CPA stable (within 5% change)
+            }
+        }
+    }
+    
     return data;
 }
 
