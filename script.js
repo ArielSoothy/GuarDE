@@ -41,16 +41,39 @@ function initializeMockData() {
     sources.forEach(source => {
         campaigns.forEach(campaign => {
             for (let i = 0; i < 10; i++) {
-                dates.forEach(date => {
+                dates.forEach((date, dateIndex) => {
+                    // Simulate marketing team changing names over time
+                    // 20% chance of name change every 7 days
+                    const weekNumber = Math.floor(dateIndex / 7);
+                    const nameChangeChance = Math.random() < 0.2;
+                    
+                    let campaignName = `${campaign.replace('_', ' ')} Campaign`;
+                    let adsetName = `AdSet ${i + 1}`;
+                    let adName = `Ad ${i + 1}`;
+                    
+                    // Simulate name changes for older dates
+                    if (weekNumber > 0 && nameChangeChance) {
+                        campaignName = `${campaign.replace('_', ' ')} Campaign v${weekNumber + 1}`;
+                        adsetName = `AdSet ${i + 1} (Updated)`;
+                        adName = `Ad ${i + 1} - New Creative`;
+                    }
+                    
+                    // Sometimes even more variations for the same IDs
+                    if (weekNumber > 1 && Math.random() < 0.1) {
+                        campaignName = `${campaign.replace('_', ' ')} - Q4 Campaign`;
+                        adsetName = `AdSet ${i + 1} - Optimized`;
+                        adName = `Ad ${i + 1} - Best Performer`;
+                    }
+                    
                     mockData.campaignSpend.push({
                         date: date,
                         source: source,
                         campaign_id: campaign,
-                        campaign_name: `${campaign.replace('_', ' ')} Campaign`,
+                        campaign_name: campaignName,
                         adset_id: `adset_${i}`,
-                        adset_name: `AdSet ${i + 1}`,
+                        adset_name: adsetName,
                         ad_id: `ad_${i}_${Math.floor(Math.random() * 5)}`,
-                        ad_name: `Ad ${i + 1}-${Math.floor(Math.random() * 5)}`,
+                        ad_name: adName,
                         spend: Math.random() * 500 + 50
                     });
                 });
