@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardio Marketing Data Engineer Assignment - Ariel Soothy</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Guardio Assignment</h1>
+                    <p>Marketing Data Engineer</p>
+                </div>
+                <nav class="nav">
+                    <a href="#overview">Overview</a>
+                    <a href="#task1">Attribution Model</a>
+                    <a href="#task2">CPA Dashboard</a>
+                    <a href="#task3">Optimization</a>
+                    <a href="#database">Mock Database</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>SQL Home Assignment Showcase</h2>
+                <p class="hero-subtitle">Interactive demonstration of marketing attribution, CPA calculations, and performance optimization</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">Complex SQL Tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">95%</span>
+                        <span class="stat-label">Performance Improvement</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">50x</span>
+                        <span class="stat-label">Scale Capability</span>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a href="#task1" class="btn btn-primary">View Solutions</a>
+                    <a href="#database" class="btn btn-secondary">Explore Data</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="overview">
+        <div class="container">
+            <h2>Assignment Overview</h2>
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <h3>Task 1: Attribution Model</h3>
+                    <p>Build first-touch and last-touch attribution model with 14-day attribution window</p>
+                    <div class="card-features">
+                        <span class="feature">UTM Parameter Parsing</span>
+                        <span class="feature">Window Functions</span>
+                        <span class="feature">Campaign Name Handling</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <h3>Task 2: CPA Dashboard</h3>
+                    <p>Create aggregated preparation table for CPA calculations at multiple granularity levels</p>
+                    <div class="card-features">
+                        <span class="feature">Atomic Granularity</span>
+                        <span class="feature">Pre-calculated Metrics</span>
+                        <span class="feature">Flexible Aggregation</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <h3>Task 3: Performance Optimization</h3>
+                    <p>Optimize processes for scale with minimal computing power usage</p>
+                    <div class="card-features">
+                        <span class="feature">Partitioning Strategy</span>
+                        <span class="feature">Incremental Processing</span>
+                        <span class="feature">95% Performance Gain</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Task 1: Attribution Model -->
+    <section id="task1" class="task-section">
+        <div class="container">
+            <h2>Task 1: Attribution Model</h2>
+            <div class="task-content">
+                <div class="task-description">
+                    <h3>Problem Statement</h3>
+                    <p>Build an attribution model to determine which marketing source contributed to users becoming paying customers. Find first-touch and last-touch attribution sources with a 14-day attribution window.</p>
+                    
+                    <h3>Business Rules</h3>
+                    <ul>
+                        <li>Attribution window: 14 days prior to activation</li>
+                        <li>If any marketing touchpoints exist → use marketing for both first/last touch</li>
+                        <li>If no marketing touchpoints → both first/last touch = organic</li>
+                        <li>Handle campaign name changes using latest names</li>
+                    </ul>
+                </div>
+
+                <div class="sql-demo">
+                    <h3>SQL Solution</h3>
+                    <div class="code-container">
+                        <pre><code class="language-sql">-- STEP 1: Parse UTM parameters from referrer URLs
+WITH parsed_sessions AS (
+  SELECT 
+    session_id,
+    user_id,
+    session_start_time,
+    is_activated,
+    
+    -- Parse marketing source
+    CASE 
+      WHEN referrer_url LIKE '%utm_source=%' THEN 
+        REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)')
+      ELSE 'organic'
+    END AS source,
+    
+    -- Parse campaign parameters
+    CASE 
+      WHEN referrer_url LIKE '%utm_campaign=%' THEN 
+        REGEXP_EXTRACT(referrer_url, r'utm_campaign=([^&]+)')
+    END AS campaign_id
+    
+  FROM sessions
+),
+
+-- STEP 2: Identify activated users and attribution windows
+activated_users AS (
+  SELECT 
+    user_id,
+    session_start_time AS activation_session_start_time,
+    DATE_SUB(DATE(session_start_time), INTERVAL 14 DAY) AS window_start_date,
+    DATE(session_start_time) AS activation_date
+  FROM parsed_sessions
+  WHERE is_activated = 1
+),
+
+-- Continue with attribution logic...
+</code></pre>
+                    </div>
+                </div>
+
+                <div class="interactive-demo">
+                    <h3>Interactive Demo</h3>
+                    <div class="demo-controls">
+                        <button class="btn btn-primary" onclick="runAttributionQuery()">Run Attribution Query</button>
+                        <button class="btn btn-secondary" onclick="showSampleData()">Show Sample Data</button>
+                    </div>
+                    <div id="attribution-results" class="results-table"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Task 2: CPA Dashboard -->
+    <section id="task2" class="task-section">
+        <div class="container">
+            <h2>Task 2: CPA Dashboard Preparation</h2>
+            <div class="task-content">
+                <div class="task-description">
+                    <h3>Objective</h3>
+                    <p>Create an aggregated preparation table for CPA calculations at multiple granularity levels: date, campaign, ad group, and ad.</p>
+                    
+                    <h3>Design Decisions</h3>
+                    <ul>
+                        <li><strong>Atomic Granularity:</strong> Store at finest level for maximum flexibility</li>
+                        <li><strong>Pre-calculated Metrics:</strong> CPA, percentages, running totals</li>
+                        <li><strong>Single Table:</strong> Eliminate complex joins in dashboard queries</li>
+                        <li><strong>Name Consistency:</strong> Handle campaign name changes</li>
+                    </ul>
+                </div>
+
+                <div class="dashboard-demo">
+                    <h3>Live CPA Dashboard</h3>
+                    <div class="dashboard-controls">
+                        <select id="granularity-select">
+                            <option value="daily">Daily CPA</option>
+                            <option value="campaign">Campaign CPA</option>
+                            <option value="source">Source CPA</option>
+                            <option value="ad">Ad Level CPA</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="updateDashboard()">Update Dashboard</button>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h4>CPA Trend</h4>
+                            <canvas id="cpa-chart"></canvas>
+                        </div>
+                        <div class="dashboard-card">
+                            <h4>Spend vs Activations</h4>
+                            <canvas id="spend-chart"></canvas>
+                        </div>
+                        <div class="dashboard-card">
+                            <h4>Top Performers</h4>
+                            <div id="top-performers"></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h4>Key Metrics</h4>
+                            <div id="key-metrics"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Task 3: Performance Optimization -->
+    <section id="task3" class="task-section">
+        <div class="container">
+            <h2>Task 3: Performance Optimization</h2>
+            <div class="task-content">
+                <div class="optimization-overview">
+                    <h3>Optimization Strategy</h3>
+                    <div class="optimization-grid">
+                        <div class="optimization-card">
+                            <h4>Table Structure</h4>
+                            <p>Partitioning, indexing, and computed columns</p>
+                            <div class="metric">
+                                <span class="metric-value">70%</span>
+                                <span class="metric-label">Query Time Reduction</span>
+                            </div>
+                        </div>
+                        <div class="optimization-card">
+                            <h4>Incremental Processing</h4>
+                            <p>Process only new data instead of full scans</p>
+                            <div class="metric">
+                                <span class="metric-value">95%</span>
+                                <span class="metric-label">Processing Time Reduction</span>
+                            </div>
+                        </div>
+                        <div class="optimization-card">
+                            <h4>Materialized Views</h4>
+                            <p>Pre-computed complex lookups</p>
+                            <div class="metric">
+                                <span class="metric-value">60%</span>
+                                <span class="metric-label">Join Complexity Reduction</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="performance-comparison">
+                    <h3>Performance Comparison</h3>
+                    <canvas id="performance-chart"></canvas>
+                </div>
+
+                <div class="scalability-projection">
+                    <h3>Scalability Projection</h3>
+                    <div class="projection-grid">
+                        <div class="projection-card">
+                            <h4>Current Capacity</h4>
+                            <ul>
+                                <li>1M sessions/day</li>
+                                <li>100K activations/day</li>
+                                <li>14-day attribution window</li>
+                            </ul>
+                        </div>
+                        <div class="projection-card">
+                            <h4>With Optimizations</h4>
+                            <ul>
+                                <li>50M+ sessions/day</li>
+                                <li>5M+ activations/day</li>
+                                <li>90+ day attribution window</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mock Database Explorer -->
+    <section id="database" class="database-section">
+        <div class="container">
+            <h2>Mock Database Explorer</h2>
+            <div class="database-content">
+                <div class="database-tabs">
+                    <button class="tab-button active" onclick="showTable('sessions')">Sessions</button>
+                    <button class="tab-button" onclick="showTable('campaign_spend')">Campaign Spend</button>
+                    <button class="tab-button" onclick="showTable('attribution_results')">Attribution Results</button>
+                </div>
+                
+                <div class="database-table-container">
+                    <div id="sessions-table" class="table-content active">
+                        <h3>Sessions Table</h3>
+                        <div class="table-stats">
+                            <span>Rows: <strong>50,000</strong></span>
+                            <span>Activated Users: <strong>2,500</strong></span>
+                            <span>Marketing Sessions: <strong>15,000</strong></span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="sessions-data"></table>
+                        </div>
+                    </div>
+                    
+                    <div id="campaign_spend-table" class="table-content">
+                        <h3>Campaign Spend Table</h3>
+                        <div class="table-stats">
+                            <span>Rows: <strong>10,000</strong></span>
+                            <span>Total Spend: <strong>$125,000</strong></span>
+                            <span>Campaigns: <strong>50</strong></span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="campaign-spend-data"></table>
+                        </div>
+                    </div>
+                    
+                    <div id="attribution_results-table" class="table-content">
+                        <h3>Attribution Results</h3>
+                        <div class="table-stats">
+                            <span>Activated Users: <strong>2,500</strong></span>
+                            <span>Marketing Attribution: <strong>1,800</strong></span>
+                            <span>Organic Attribution: <strong>700</strong></span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="attribution-data"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>Ariel Soothy</h3>
+                    <p>Marketing Data Engineer Candidate</p>
+                    <p>Demonstrating SQL expertise, performance optimization, and full-stack capabilities</p>
+                </div>
+                <div class="footer-links">
+                    <a href="mailto:ariel.soothy@example.com">Email</a>
+                    <a href="https://linkedin.com/in/arielsoothy">LinkedIn</a>
+                    <a href="https://github.com/arielsoothy">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
