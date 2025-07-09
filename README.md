@@ -125,9 +125,9 @@ This project showcases:
 
 **Ariel Soothy**  
 Marketing Data Engineer Candidate  
-📧 ariel.soothy@example.com  
-🔗 [LinkedIn](https://linkedin.com/in/arielsoothy)  
-🐙 [GitHub](https://github.com/arielsoothy)
+📧 arielsoothy@gmail.com  
+🔗 [LinkedIn](https://www.linkedin.com/in/ariel-soothy/)  
+🐙 [GitHub](https://github.com/ArielSoothy)
 
 ---
 
