@@ -360,6 +360,22 @@ body {
     font-size: 0.8rem; 
 }
 
+.source-cybersecurity_today { 
+    background: #6f42c1; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
+.source-krebs_security { 
+    background: #e83e8c; 
+    color: white; 
+    padding: 0.25rem 0.5rem; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+}
+
 .touch-marketing { 
     background: #fd7e14; 
     color: white; 

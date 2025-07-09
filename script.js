@@ -7,9 +7,9 @@ const mockData = {
 
 // Initialize mock data
 function initializeMockData() {
-    // Generate sessions data
-    const sources = ['google', 'facebook', 'linkedin', 'twitter'];
-    const campaigns = ['brand_awareness', 'lead_gen', 'retargeting', 'conversion'];
+    // Generate sessions data - Guardio-specific
+    const sources = ['google', 'facebook', 'linkedin', 'cybersecurity_today', 'krebs_security'];
+    const campaigns = ['phishing_protection', 'browser_security', 'small_business_protection', 'malware_detection', 'data_breach_prevention'];
     const devices = ['mobile', 'desktop', 'tablet'];
     
     for (let i = 0; i < 1000; i++) {
@@ -608,6 +608,7 @@ FROM cpa_dashboard_table GROUP BY date ORDER BY date DESC;</code>
                     </div>
                     <div class="logic-item">
                         <strong>Data Source:</strong> From Task 1 attribution results + campaign spend data
+                        <br/><small>Activation = Extension install + first threat detected</small>
                     </div>
                 </div>
             </div>
@@ -686,8 +687,8 @@ FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY campaign_cpa ASC;</code
                         </ul>
                     </div>
                     <div class="logic-item">
-                        <strong>Business Impact:</strong> Lower CPA = Better ROI
-                        <br/>Excellent campaigns should get more budget allocation
+                        <strong>Business Impact:</strong> Lower CPA = Better ROI for cybersecurity user acquisition
+                        <br/>Scale successful campaigns that drive quality extension installs
                     </div>
                 </div>
             </div>
@@ -759,10 +760,11 @@ FROM cpa_dashboard_table GROUP BY source ORDER BY source_cpa ASC;</code>
                         <br/>Shows budget distribution across channels
                     </div>
                     <div class="logic-item">
-                        <strong>Channel Efficiency:</strong> CPA comparison reveals which sources deliver activations most cost-effectively
+                        <strong>Channel Efficiency:</strong> CPA comparison reveals which sources deliver quality cybersecurity users most cost-effectively
                     </div>
                     <div class="logic-item">
                         <strong>Optimization Strategy:</strong> Reallocate budget from high-CPA to low-CPA sources
+                        <br/><small>Cybersecurity publications often have higher intent users</small>
                     </div>
                 </div>
             </div>
@@ -839,7 +841,8 @@ FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY ad_cpa ASC;</c
                         </ul>
                     </div>
                     <div class="logic-item">
-                        <strong>Granular Optimization:</strong> Individual ad performance reveals what creative/copy works best
+                        <strong>Granular Optimization:</strong> Individual ad performance reveals what cybersecurity messaging resonates best
+                        <br/><small>Video demos vs. banner ads vs. CTA buttons for threat detection</small>
                     </div>
                 </div>
             </div>
@@ -968,7 +971,7 @@ function generateDailyCPAData() {
 }
 
 function generateCampaignCPAData() {
-    const campaigns = ['Brand Awareness Campaign', 'Lead Generation Campaign', 'Retargeting Campaign', 'Conversion Campaign'];
+    const campaigns = ['Phishing Protection Campaign', 'Browser Security Campaign', 'Small Business Protection', 'Malware Detection Campaign'];
     const performances = ['Excellent', 'Good', 'Average', 'Poor'];
     
     return campaigns.map((campaign, index) => ({
@@ -981,8 +984,8 @@ function generateCampaignCPAData() {
 }
 
 function generateSourceCPAData() {
-    const sources = ['google', 'facebook', 'linkedin', 'twitter'];
-    const shares = [35, 28, 22, 15];
+    const sources = ['google', 'facebook', 'linkedin', 'cybersecurity_today', 'krebs_security'];
+    const shares = [35, 25, 20, 12, 8];
     
     return sources.map((source, index) => ({
         source: source,
@@ -995,17 +998,17 @@ function generateSourceCPAData() {
 
 function generateAdCPAData() {
     const ads = [
-        { name: 'Security Banner Ad', campaign: 'Brand Awareness' },
-        { name: 'Lead Form Ad', campaign: 'Lead Generation' },
-        { name: 'Retargeting Video', campaign: 'Retargeting' },
-        { name: 'Conversion CTA', campaign: 'Conversion' },
-        { name: 'Product Demo Ad', campaign: 'Brand Awareness' }
+        { name: 'Phishing Alert Video', campaign: 'Phishing Protection' },
+        { name: 'Browser Extension Banner', campaign: 'Browser Security' },
+        { name: 'Small Business Security Ad', campaign: 'Small Business Protection' },
+        { name: 'Malware Detection Demo', campaign: 'Malware Detection' },
+        { name: 'Data Breach Prevention CTA', campaign: 'Data Breach Prevention' }
     ];
     const efficiencies = ['High', 'Medium', 'Low', 'High', 'Medium'];
     
     return ads.map((ad, index) => ({
         ad_name: ad.name,
-        campaign: ad.campaign,
+        campaign: ads[index % 4].campaign.replace('Campaign', ''),
         spend: Math.floor(Math.random() * 2000) + 500,
         activations: Math.floor(Math.random() * 50) + 10,
         cpa: Math.random() * 40 + 20,
