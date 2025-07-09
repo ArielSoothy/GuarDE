@@ -591,6 +591,27 @@ function getDailyCPAResults() {
 SUM(total_spend)/NULLIF(SUM(activations),0) as daily_cpa 
 FROM cpa_dashboard_table GROUP BY date ORDER BY date DESC;</code>
             </div>
+            
+            <div class="business-logic-explanation">
+                <h5>📊 Business Logic Behind the Results:</h5>
+                <div class="logic-grid">
+                    <div class="logic-item">
+                        <strong>CPA Calculation:</strong> Total Spend ÷ Total Activations = Cost per Activation
+                    </div>
+                    <div class="logic-item">
+                        <strong>Trend Analysis:</strong> Compare today's CPA vs yesterday's CPA
+                        <ul>
+                            <li>📈 = CPA increased (worse performance)</li>
+                            <li>📉 = CPA decreased (better performance)</li>
+                            <li>➡️ = CPA stayed roughly the same</li>
+                        </ul>
+                    </div>
+                    <div class="logic-item">
+                        <strong>Data Source:</strong> From Task 1 attribution results + campaign spend data
+                    </div>
+                </div>
+            </div>
+            
             <table class="results-table-inner">
                 <thead>
                     <tr>
@@ -598,21 +619,43 @@ FROM cpa_dashboard_table GROUP BY date ORDER BY date DESC;</code>
                         <th>Total Spend</th>
                         <th>Activations</th>
                         <th>Daily CPA</th>
-                        <th>Trend</th>
+                        <th>Trend Analysis</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${dailyData.map(row => `
+                    ${dailyData.map((row, index) => `
                         <tr>
                             <td>${row.date}</td>
                             <td>$${row.spend.toLocaleString()}</td>
                             <td>${row.activations}</td>
                             <td>$${row.cpa.toFixed(2)}</td>
-                            <td>${row.trend}</td>
+                            <td>
+                                <span class="trend-indicator">${row.trend}</span>
+                                <span class="trend-explanation">${getTrendExplanation(row, index, dailyData)}</span>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
+            
+            <div class="insights-section">
+                <h5>💡 Key Insights from This Data:</h5>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <strong>Average CPA:</strong> $${(dailyData.reduce((sum, row) => sum + row.cpa, 0) / dailyData.length).toFixed(2)}
+                    </div>
+                    <div class="insight-card">
+                        <strong>Best Day:</strong> ${dailyData.reduce((best, row) => row.cpa < best.cpa ? row : best).date} 
+                        (${dailyData.reduce((best, row) => row.cpa < best.cpa ? row : best).cpa.toFixed(2)})
+                    </div>
+                    <div class="insight-card">
+                        <strong>Total Spend:</strong> $${dailyData.reduce((sum, row) => sum + row.spend, 0).toLocaleString()}
+                    </div>
+                    <div class="insight-card">
+                        <strong>Total Activations:</strong> ${dailyData.reduce((sum, row) => sum + row.activations, 0)}
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -629,6 +672,26 @@ function getCampaignCPAResults() {
 SUM(total_spend)/NULLIF(SUM(activations),0) as campaign_cpa 
 FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY campaign_cpa ASC;</code>
             </div>
+            
+            <div class="business-logic-explanation">
+                <h5>📊 Campaign Performance Logic:</h5>
+                <div class="logic-grid">
+                    <div class="logic-item">
+                        <strong>Performance Rating:</strong> Based on CPA compared to average
+                        <ul>
+                            <li><span class="performance-excellent">Excellent</span> = CPA &lt; $30 (high efficiency)</li>
+                            <li><span class="performance-good">Good</span> = CPA $30-40 (above average)</li>
+                            <li><span class="performance-average">Average</span> = CPA $40-50 (market standard)</li>
+                            <li><span class="performance-poor">Poor</span> = CPA &gt; $50 (needs optimization)</li>
+                        </ul>
+                    </div>
+                    <div class="logic-item">
+                        <strong>Business Impact:</strong> Lower CPA = Better ROI
+                        <br/>Excellent campaigns should get more budget allocation
+                    </div>
+                </div>
+            </div>
+            
             <table class="results-table-inner">
                 <thead>
                     <tr>
@@ -636,7 +699,7 @@ FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY campaign_cpa ASC;</code
                         <th>Total Spend</th>
                         <th>Activations</th>
                         <th>Campaign CPA</th>
-                        <th>Performance</th>
+                        <th>Performance Rating</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -646,11 +709,31 @@ FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY campaign_cpa ASC;</code
                             <td>$${row.spend.toLocaleString()}</td>
                             <td>${row.activations}</td>
                             <td>$${row.cpa.toFixed(2)}</td>
-                            <td><span class="performance-${row.performance.toLowerCase()}">${row.performance}</span></td>
+                            <td>
+                                <span class="performance-${row.performance.toLowerCase()}">${row.performance}</span>
+                                <span class="performance-explanation">${getPerformanceExplanation(row.performance, row.cpa)}</span>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
+            
+            <div class="insights-section">
+                <h5>💡 Campaign Optimization Recommendations:</h5>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <strong>Best Performer:</strong> ${campaignData.reduce((best, row) => row.cpa < best.cpa ? row : best).campaign}
+                        <br/><small>Scale up budget for this campaign</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Needs Attention:</strong> ${campaignData.reduce((worst, row) => row.cpa > worst.cpa ? row : worst).campaign}
+                        <br/><small>Optimize targeting and creative</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Budget Efficiency:</strong> ${Math.round(campaignData.filter(row => row.cpa < 40).length / campaignData.length * 100)}% of campaigns performing well
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -667,6 +750,23 @@ function getSourceCPAResults() {
 SUM(total_spend)/NULLIF(SUM(activations),0) as source_cpa 
 FROM cpa_dashboard_table GROUP BY source ORDER BY source_cpa ASC;</code>
             </div>
+            
+            <div class="business-logic-explanation">
+                <h5>📊 Channel Performance Analysis:</h5>
+                <div class="logic-grid">
+                    <div class="logic-item">
+                        <strong>Market Share:</strong> % of total spend allocated to each source
+                        <br/>Shows budget distribution across channels
+                    </div>
+                    <div class="logic-item">
+                        <strong>Channel Efficiency:</strong> CPA comparison reveals which sources deliver activations most cost-effectively
+                    </div>
+                    <div class="logic-item">
+                        <strong>Optimization Strategy:</strong> Reallocate budget from high-CPA to low-CPA sources
+                    </div>
+                </div>
+            </div>
+            
             <table class="results-table-inner">
                 <thead>
                     <tr>
@@ -684,11 +784,32 @@ FROM cpa_dashboard_table GROUP BY source ORDER BY source_cpa ASC;</code>
                             <td>$${row.spend.toLocaleString()}</td>
                             <td>${row.activations}</td>
                             <td>$${row.cpa.toFixed(2)}</td>
-                            <td>${row.share}%</td>
+                            <td>
+                                <span class="share-percentage">${row.share}%</span>
+                                <span class="share-explanation">${getShareExplanation(row.share)}</span>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
+            
+            <div class="insights-section">
+                <h5>💡 Channel Optimization Insights:</h5>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <strong>Most Efficient:</strong> ${sourceData.reduce((best, row) => row.cpa < best.cpa ? row : best).source}
+                        <br/><small>CPA: $${sourceData.reduce((best, row) => row.cpa < best.cpa ? row : best).cpa.toFixed(2)}</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Largest Channel:</strong> ${sourceData.reduce((largest, row) => row.share > largest.share ? row : largest).source}
+                        <br/><small>${sourceData.reduce((largest, row) => row.share > largest.share ? row : largest).share}% of total spend</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Budget Reallocation:</strong> Move 10% budget from highest to lowest CPA source
+                        <br/><small>Est. 15% CPA improvement</small>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -705,6 +826,24 @@ function getAdCPAResults() {
 SUM(total_spend)/NULLIF(SUM(activations),0) as ad_cpa 
 FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY ad_cpa ASC;</code>
             </div>
+            
+            <div class="business-logic-explanation">
+                <h5>📊 Ad-Level Performance Analysis:</h5>
+                <div class="logic-grid">
+                    <div class="logic-item">
+                        <strong>Efficiency Rating:</strong> Based on CPA performance within campaign
+                        <ul>
+                            <li><span class="efficiency-high">High</span> = Top 33% performers (scale up)</li>
+                            <li><span class="efficiency-medium">Medium</span> = Average performers (optimize)</li>
+                            <li><span class="efficiency-low">Low</span> = Bottom 33% (pause/redesign)</li>
+                        </ul>
+                    </div>
+                    <div class="logic-item">
+                        <strong>Granular Optimization:</strong> Individual ad performance reveals what creative/copy works best
+                    </div>
+                </div>
+            </div>
+            
             <table class="results-table-inner">
                 <thead>
                     <tr>
@@ -713,7 +852,7 @@ FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY ad_cpa ASC;</c
                         <th>Spend</th>
                         <th>Activations</th>
                         <th>Ad CPA</th>
-                        <th>Efficiency</th>
+                        <th>Efficiency Rating</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -724,25 +863,96 @@ FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY ad_cpa ASC;</c
                             <td>$${row.spend.toLocaleString()}</td>
                             <td>${row.activations}</td>
                             <td>$${row.cpa.toFixed(2)}</td>
-                            <td><span class="efficiency-${row.efficiency.toLowerCase()}">${row.efficiency}</span></td>
+                            <td>
+                                <span class="efficiency-${row.efficiency.toLowerCase()}">${row.efficiency}</span>
+                                <span class="efficiency-explanation">${getEfficiencyExplanation(row.efficiency)}</span>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
+            
+            <div class="insights-section">
+                <h5>💡 Ad Optimization Actions:</h5>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <strong>Top Performer:</strong> ${adData.reduce((best, row) => row.cpa < best.cpa ? row : best).ad_name}
+                        <br/><small>Duplicate this ad creative style</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Needs Pause:</strong> ${adData.reduce((worst, row) => row.cpa > worst.cpa ? row : worst).ad_name}
+                        <br/><small>CPA: $${adData.reduce((worst, row) => row.cpa > worst.cpa ? row : worst).cpa.toFixed(2)} (too high)</small>
+                    </div>
+                    <div class="insight-card">
+                        <strong>Budget Reallocation:</strong> Shift ${Math.round(adData.filter(row => row.efficiency === 'Low').length / adData.length * 100)}% of budget from low to high efficiency ads
+                    </div>
+                </div>
+            </div>
         </div>
     `;
+}
+
+// Helper functions for business logic explanations
+function getTrendExplanation(row, index, data) {
+    if (index === data.length - 1) return "Latest data";
+    
+    const previousCPA = data[index + 1].cpa;
+    const change = ((row.cpa - previousCPA) / previousCPA * 100).toFixed(1);
+    
+    if (row.trend === '📈') {
+        return `CPA increased by ${change}%`;
+    } else if (row.trend === '📉') {
+        return `CPA decreased by ${Math.abs(change)}%`;
+    } else {
+        return `CPA stable (${change}% change)`;
+    }
+}
+
+function getPerformanceExplanation(performance, cpa) {
+    switch(performance) {
+        case 'Excellent': return `Very efficient at $${cpa.toFixed(2)}`;
+        case 'Good': return `Above average performance`;
+        case 'Average': return `Market standard CPA`;
+        case 'Poor': return `Needs optimization`;
+        default: return '';
+    }
+}
+
+function getShareExplanation(share) {
+    if (share > 30) return "Dominant channel";
+    if (share > 20) return "Major channel";
+    if (share > 10) return "Significant channel";
+    return "Minor channel";
+}
+
+function getEfficiencyExplanation(efficiency) {
+    switch(efficiency) {
+        case 'High': return "Scale up budget";
+        case 'Medium': return "Optimize creative";
+        case 'Low': return "Consider pausing";
+        default: return '';
+    }
 }
 
 // Data generation functions
 function generateDailyCPAData() {
     const data = [];
+    let previousCPA = 50; // Starting CPA
+    
     for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const spend = Math.floor(Math.random() * 2000) + 1000;
         const activations = Math.floor(Math.random() * 40) + 20;
         const cpa = spend / activations;
-        const trend = i === 0 ? '📈' : i === 1 ? '📉' : '➡️';
+        
+        // Determine trend based on actual CPA comparison
+        let trend = '➡️';
+        if (i < 6) { // Not the first day
+            const change = ((cpa - previousCPA) / previousCPA);
+            if (change > 0.05) trend = '📈';
+            else if (change < -0.05) trend = '📉';
+        }
         
         data.push({
             date: date.toLocaleDateString(),
@@ -751,6 +961,8 @@ function generateDailyCPAData() {
             cpa: cpa,
             trend: trend
         });
+        
+        previousCPA = cpa;
     }
     return data;
 }
