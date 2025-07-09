@@ -1986,24 +1986,24 @@ function showCompleteAttributionResults() {
                 <table>
                     <thead>
                         <tr>
-                            <th>User ID</th>
-                            <th>Activation Time</th>
-                            <th>First Touch Time</th>
-                            <th>First Touch Source</th>
-                            <th>First Touch Campaign ID</th>
-                            <th>First Touch Campaign Name</th>
-                            <th>First Touch Adset ID</th>
-                            <th>First Touch Adset Name</th>
-                            <th>First Touch Ad ID</th>
-                            <th>First Touch Ad Name</th>
-                            <th>Last Touch Time</th>
-                            <th>Last Touch Source</th>
-                            <th>Last Touch Campaign ID</th>
-                            <th>Last Touch Campaign Name</th>
-                            <th>Last Touch Adset ID</th>
-                            <th>Last Touch Adset Name</th>
-                            <th>Last Touch Ad ID</th>
-                            <th>Last Touch Ad Name</th>
+                            <th>user_id</th>
+                            <th>activation_session_start_time</th>
+                            <th>first_touch_attribution_time</th>
+                            <th>first_touch_attribution_source</th>
+                            <th>first_touch_campaign_id</th>
+                            <th>first_touch_campaign_name</th>
+                            <th>first_touch_adset_id</th>
+                            <th>first_touch_adset_name</th>
+                            <th>first_touch_ad_id</th>
+                            <th>first_touch_ad_name</th>
+                            <th>last_touch_attribution_date</th>
+                            <th>last_touch_attribution_source</th>
+                            <th>last_touch_campaign_id</th>
+                            <th>last_touch_campaign_name</th>
+                            <th>last_touch_adset_id</th>
+                            <th>last_touch_adset_name</th>
+                            <th>last_touch_ad_id</th>
+                            <th>last_touch_ad_name</th>
                         </tr>
                     </thead>
                     <tbody>
