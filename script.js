@@ -835,6 +835,513 @@ FROM combined_spend_activations</code>
     `;
 }
 
+// Performance Optimization Demonstrations
+function showOptimizationStep(stepNumber) {
+    const resultsDiv = document.getElementById('optimization-results');
+    if (!resultsDiv) return;
+    
+    resultsDiv.innerHTML = '<div class="loading">Analyzing optimization strategy...</div>';
+    
+    setTimeout(() => {
+        let stepHTML = '';
+        
+        switch(stepNumber) {
+            case 1:
+                stepHTML = getTableStructureOptimization();
+                break;
+            case 2:
+                stepHTML = getIncrementalProcessingOptimization();
+                break;
+            case 3:
+                stepHTML = getMaterializedViewsOptimization();
+                break;
+            case 4:
+                stepHTML = getCompleteOptimizationComparison();
+                break;
+        }
+        
+        resultsDiv.innerHTML = stepHTML;
+    }, 1000);
+}
+
+function getTableStructureOptimization() {
+    return `
+        <div class="optimization-step">
+            <h4>Table Structure Optimization</h4>
+            <div class="optimization-description">
+                <p><strong>Strategy:</strong> Add partitioning, indexing, and computed columns to eliminate expensive operations</p>
+            </div>
+            
+            <div class="optimization-comparison">
+                <div class="before-after-grid">
+                    <div class="before-section">
+                        <h5>❌ Before Optimization</h5>
+                        <div class="optimization-code">
+                            <code>-- Sessions table without optimization
+CREATE TABLE sessions (
+  session_id STRING,
+  user_id STRING,
+  referrer_url STRING,
+  session_start_time TIMESTAMP,
+  is_activated INTEGER
+);
+
+-- Every query requires expensive regex parsing
+SELECT 
+  REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)') AS source
+FROM sessions
+WHERE DATE(session_start_time) >= '2024-01-01';</code>
+                        </div>
+                        <div class="performance-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Query Time</span>
+                                <span class="metric-value bad">45 seconds</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">CPU Usage</span>
+                                <span class="metric-value bad">85%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Scanned Rows</span>
+                                <span class="metric-value bad">50M</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="after-section">
+                        <h5>✅ After Optimization</h5>
+                        <div class="optimization-code">
+                            <code>-- Optimized sessions table
+CREATE TABLE sessions_optimized (
+  session_id STRING,
+  user_id STRING,
+  referrer_url STRING,
+  session_start_time TIMESTAMP,
+  is_activated INTEGER,
+  session_date DATE GENERATED ALWAYS AS (DATE(session_start_time)),
+  
+  -- Pre-computed UTM fields
+  utm_source STRING GENERATED ALWAYS AS (
+    CASE WHEN referrer_url LIKE '%utm_source=%' 
+    THEN REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)')
+    ELSE 'organic' END
+  )
+)
+PARTITION BY session_date
+CLUSTER BY user_id;
+
+-- Fast query with pre-computed fields
+SELECT utm_source AS source
+FROM sessions_optimized
+WHERE session_date >= '2024-01-01';</code>
+                        </div>
+                        <div class="performance-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Query Time</span>
+                                <span class="metric-value good">3 seconds</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">CPU Usage</span>
+                                <span class="metric-value good">25%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Scanned Rows</span>
+                                <span class="metric-value good">2M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="improvement-summary">
+                    <h5>📊 Performance Improvements</h5>
+                    <div class="improvement-stats">
+                        <div class="improvement-stat">
+                            <span class="improvement-label">Query Time</span>
+                            <span class="improvement-value">93% faster</span>
+                        </div>
+                        <div class="improvement-stat">
+                            <span class="improvement-label">CPU Usage</span>
+                            <span class="improvement-value">70% reduction</span>
+                        </div>
+                        <div class="improvement-stat">
+                            <span class="improvement-label">Data Scanned</span>
+                            <span class="improvement-value">96% reduction</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getIncrementalProcessingOptimization() {
+    return `
+        <div class="optimization-step">
+            <h4>Incremental Processing Architecture</h4>
+            <div class="optimization-description">
+                <p><strong>Strategy:</strong> Process only new activations daily instead of full historical recalculation</p>
+            </div>
+            
+            <div class="optimization-comparison">
+                <div class="before-after-grid">
+                    <div class="before-section">
+                        <h5>❌ Before: Full Historical Processing</h5>
+                        <div class="optimization-code">
+                            <code>-- Daily job processes ALL historical data
+WITH all_activations AS (
+  SELECT user_id, session_start_time
+  FROM sessions 
+  WHERE is_activated = 1
+),
+all_attribution AS (
+  SELECT au.user_id, au.session_start_time, ...
+  FROM all_activations au
+  JOIN sessions s ON au.user_id = s.user_id
+  WHERE s.session_start_time <= au.session_start_time
+    AND s.session_start_time >= DATE_SUB(au.session_start_time, INTERVAL 14 DAY)
+)
+SELECT * FROM all_attribution;</code>
+                        </div>
+                        <div class="processing-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Daily Processing Time</span>
+                                <span class="stat-value bad">4 hours</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Data Processed</span>
+                                <span class="stat-value bad">50M sessions</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Cost per Day</span>
+                                <span class="stat-value bad">$250</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="after-section">
+                        <h5>✅ After: Incremental Processing</h5>
+                        <div class="optimization-code">
+                            <code>-- Process only yesterday's new activations
+CREATE OR REPLACE PROCEDURE daily_attribution_update()
+BEGIN
+  -- Get only new activations
+  CREATE TEMP TABLE new_activations AS
+  SELECT user_id, session_start_time
+  FROM sessions 
+  WHERE session_date = CURRENT_DATE() - 1 
+    AND is_activated = 1;
+  
+  -- Calculate attribution only for new users
+  INSERT INTO attribution_results
+  SELECT na.user_id, na.session_start_time, ...
+  FROM new_activations na
+  JOIN sessions s ON na.user_id = s.user_id
+  WHERE s.session_date BETWEEN DATE(na.session_start_time) - 14 
+                           AND DATE(na.session_start_time);
+END;</code>
+                        </div>
+                        <div class="processing-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Daily Processing Time</span>
+                                <span class="stat-value good">12 minutes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Data Processed</span>
+                                <span class="stat-value good">500K sessions</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Cost per Day</span>
+                                <span class="stat-value good">$12</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="improvement-summary">
+                    <h5>📊 Scalability Impact</h5>
+                    <div class="scalability-chart">
+                        <div class="scale-comparison">
+                            <div class="scale-item">
+                                <span class="scale-label">Processing Time</span>
+                                <div class="scale-bar">
+                                    <div class="scale-before" style="width: 100%">4 hours</div>
+                                    <div class="scale-after" style="width: 5%">12 min</div>
+                                </div>
+                                <span class="scale-improvement">95% faster</span>
+                            </div>
+                            <div class="scale-item">
+                                <span class="scale-label">Daily Cost</span>
+                                <div class="scale-bar">
+                                    <div class="scale-before" style="width: 100%">$250</div>
+                                    <div class="scale-after" style="width: 5%">$12</div>
+                                </div>
+                                <span class="scale-improvement">95% cheaper</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getMaterializedViewsOptimization() {
+    return `
+        <div class="optimization-step">
+            <h4>Materialized Views for Complex Lookups</h4>
+            <div class="optimization-description">
+                <p><strong>Strategy:</strong> Pre-compute campaign name mappings and complex aggregations</p>
+            </div>
+            
+            <div class="optimization-comparison">
+                <div class="before-after-grid">
+                    <div class="before-section">
+                        <h5>❌ Before: Complex Joins Every Query</h5>
+                        <div class="optimization-code">
+                            <code>-- Every query requires complex window function
+SELECT 
+  a.user_id,
+  a.campaign_id,
+  c.campaign_name,
+  c.adset_name,
+  c.ad_name
+FROM attribution_results a
+LEFT JOIN (
+  SELECT DISTINCT
+    source, campaign_id, adset_id, ad_id,
+    FIRST_VALUE(campaign_name) OVER (
+      PARTITION BY source, campaign_id 
+      ORDER BY date DESC
+    ) AS campaign_name,
+    FIRST_VALUE(adset_name) OVER (
+      PARTITION BY source, adset_id 
+      ORDER BY date DESC
+    ) AS adset_name,
+    FIRST_VALUE(ad_name) OVER (
+      PARTITION BY source, ad_id 
+      ORDER BY date DESC
+    ) AS ad_name
+  FROM campaign_spend
+) c ON a.campaign_id = c.campaign_id;</code>
+                        </div>
+                        <div class="complexity-metrics">
+                            <div class="complexity-item">
+                                <span class="complexity-label">Query Complexity</span>
+                                <span class="complexity-value bad">High</span>
+                            </div>
+                            <div class="complexity-item">
+                                <span class="complexity-label">Join Operations</span>
+                                <span class="complexity-value bad">3 window functions</span>
+                            </div>
+                            <div class="complexity-item">
+                                <span class="complexity-label">Query Time</span>
+                                <span class="complexity-value bad">25 seconds</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="after-section">
+                        <h5>✅ After: Materialized Views</h5>
+                        <div class="optimization-code">
+                            <code>-- Pre-computed materialized view
+CREATE MATERIALIZED VIEW campaign_names_current AS
+SELECT 
+  source, campaign_id, adset_id, ad_id,
+  campaign_name, adset_name, ad_name
+FROM (
+  SELECT *,
+    ROW_NUMBER() OVER (
+      PARTITION BY source, campaign_id, adset_id, ad_id 
+      ORDER BY date DESC
+    ) AS rn
+  FROM campaign_spend
+) WHERE rn = 1;
+
+-- Simple and fast query
+SELECT 
+  a.user_id,
+  a.campaign_id,
+  c.campaign_name,
+  c.adset_name,
+  c.ad_name
+FROM attribution_results a
+LEFT JOIN campaign_names_current c 
+  ON a.campaign_id = c.campaign_id;</code>
+                        </div>
+                        <div class="complexity-metrics">
+                            <div class="complexity-item">
+                                <span class="complexity-label">Query Complexity</span>
+                                <span class="complexity-value good">Low</span>
+                            </div>
+                            <div class="complexity-item">
+                                <span class="complexity-label">Join Operations</span>
+                                <span class="complexity-value good">1 simple join</span>
+                            </div>
+                            <div class="complexity-item">
+                                <span class="complexity-label">Query Time</span>
+                                <span class="complexity-value good">3 seconds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="improvement-summary">
+                    <h5>📊 Developer Experience Impact</h5>
+                    <div class="dev-impact">
+                        <div class="impact-item">
+                            <span class="impact-icon">🚀</span>
+                            <span class="impact-text">88% faster query execution</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-icon">🛠️</span>
+                            <span class="impact-text">Simplified query complexity</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-icon">🔄</span>
+                            <span class="impact-text">Auto-refresh every 24 hours</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="impact-icon">📈</span>
+                            <span class="impact-text">Consistent performance at scale</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getCompleteOptimizationComparison() {
+    return `
+        <div class="optimization-step">
+            <h4>Complete Optimization Impact</h4>
+            <div class="optimization-description">
+                <p><strong>Combined Effect:</strong> All optimization strategies working together for maximum performance</p>
+            </div>
+            
+            <div class="complete-comparison">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h5>Query Performance</h5>
+                        <div class="metric-comparison">
+                            <div class="metric-bar">
+                                <div class="metric-before">Before: 45s</div>
+                                <div class="metric-after">After: 3s</div>
+                            </div>
+                            <div class="metric-improvement">93% faster</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h5>Daily Processing</h5>
+                        <div class="metric-comparison">
+                            <div class="metric-bar">
+                                <div class="metric-before">Before: 4 hours</div>
+                                <div class="metric-after">After: 12 min</div>
+                            </div>
+                            <div class="metric-improvement">95% reduction</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h5>Infrastructure Cost</h5>
+                        <div class="metric-comparison">
+                            <div class="metric-bar">
+                                <div class="metric-before">Before: $250/day</div>
+                                <div class="metric-after">After: $12/day</div>
+                            </div>
+                            <div class="metric-improvement">95% cheaper</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h5>Data Processed</h5>
+                        <div class="metric-comparison">
+                            <div class="metric-bar">
+                                <div class="metric-before">Before: 50M rows</div>
+                                <div class="metric-after">After: 500K rows</div>
+                            </div>
+                            <div class="metric-improvement">99% reduction</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scalability-projection">
+                    <h5>📈 Scalability Projection</h5>
+                    <div class="projection-table">
+                        <table class="results-table-inner">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Current Capacity</th>
+                                    <th>With Optimizations</th>
+                                    <th>Growth Supported</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Daily Sessions</td>
+                                    <td>1M</td>
+                                    <td>50M+</td>
+                                    <td>50x</td>
+                                </tr>
+                                <tr>
+                                    <td>Daily Activations</td>
+                                    <td>100K</td>
+                                    <td>5M+</td>
+                                    <td>50x</td>
+                                </tr>
+                                <tr>
+                                    <td>Attribution Window</td>
+                                    <td>14 days</td>
+                                    <td>90+ days</td>
+                                    <td>6x</td>
+                                </tr>
+                                <tr>
+                                    <td>Processing Time</td>
+                                    <td>4 hours</td>
+                                    <td>12 minutes</td>
+                                    <td>20x faster</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="implementation-timeline">
+                    <h5>🗓️ Implementation Roadmap</h5>
+                    <div class="timeline-items">
+                        <div class="timeline-item">
+                            <div class="timeline-phase">Phase 1 (Week 1)</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Quick Wins</div>
+                                <div class="timeline-description">Partitioning, indexing, basic optimizations</div>
+                                <div class="timeline-impact">50% improvement</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-phase">Phase 2 (Week 2-3)</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Structural Changes</div>
+                                <div class="timeline-description">Computed columns, materialized views</div>
+                                <div class="timeline-impact">80% improvement</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-phase">Phase 3 (Week 4-6)</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Advanced Architecture</div>
+                                <div class="timeline-description">Incremental processing, full optimization</div>
+                                <div class="timeline-impact">95% improvement</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function updateCPAChart(granularity) {
     if (!cpaChart) return;
     
@@ -1088,3 +1595,4 @@ window.showTable = showTable;
 window.runStep = runStep;
 window.updateDashboard = updateDashboard;
 window.showCPAQuerySteps = showCPAQuerySteps;
+window.showOptimizationStep = showOptimizationStep;

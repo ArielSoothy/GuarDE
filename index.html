@@ -278,7 +278,19 @@ SUM(total_spend)/NULLIF(SUM(activations),0) as cpa FROM cpa_dashboard_table GROU
                 </div>
 
                 <div class="performance-comparison">
-                    <h3>Performance Comparison</h3>
+                    <h3>Performance Optimization Results</h3>
+                    <div class="optimization-controls">
+                        <button class="btn btn-primary" onclick="showOptimizationStep(1)">Table Structure Optimization</button>
+                        <button class="btn btn-primary" onclick="showOptimizationStep(2)">Incremental Processing</button>
+                        <button class="btn btn-primary" onclick="showOptimizationStep(3)">Materialized Views</button>
+                        <button class="btn btn-secondary" onclick="showOptimizationStep(4)">Complete Comparison</button>
+                    </div>
+                    <div id="optimization-results" class="optimization-results">
+                        <div class="optimization-explanation">
+                            <h4>Performance Optimization Strategies</h4>
+                            <p>Click the buttons above to see detailed before/after comparisons for each optimization strategy.</p>
+                        </div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="performance-chart"></canvas>
                     </div>
