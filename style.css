@@ -1270,15 +1270,15 @@ body {
 }
 
 .attribution-table-container {
-    overflow-x: scroll !important;
-    overflow-y: visible;
-    max-width: 100%;
-    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
     border: 1px solid #e9ecef;
     border-radius: 8px;
     margin-top: 1rem;
     -webkit-overflow-scrolling: touch;
-    display: block;
+    display: block !important;
 }
 
 .attribution-table-container::-webkit-scrollbar {
@@ -1326,12 +1326,12 @@ body {
 
 .complete-results-table table,
 .sortable-table {
-    width: max-content;
-    min-width: 1400px;
+    width: max-content !important;
+    min-width: 1600px !important;
     border-collapse: collapse;
     font-size: 0.85rem;
     background: white;
-    table-layout: fixed;
+    table-layout: auto !important;
 }
 
 .complete-results-table th,
@@ -2107,6 +2107,16 @@ body {
 
 .table-wrapper tr:hover {
     background: #f8f9fa;
+}
+
+/* Universal table container fix */
+.attribution-table-container,
+.complete-results-container,
+.results-table-container,
+.table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
 }
 
 /* Footer */
