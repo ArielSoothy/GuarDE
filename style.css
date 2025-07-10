@@ -1335,7 +1335,7 @@ body {
 .sortable-table {
     width: max-content;
     border-collapse: collapse;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     background: white;
     table-layout: auto;
 }
@@ -1344,16 +1344,15 @@ body {
 .complete-results-table td,
 .sortable-table th,
 .sortable-table td {
-    padding: 0.3rem 0.5rem;
+    padding: 0.4rem 0.6rem;
     text-align: left;
     border-bottom: 1px solid #e9ecef;
     word-wrap: break-word;
-    min-width: 80px;
-    max-width: 120px;
+    min-width: 70px;
+    max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.8rem;
 }
 
 .sortable-header {
