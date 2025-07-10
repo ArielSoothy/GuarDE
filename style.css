@@ -915,9 +915,10 @@ body {
 
 .insight-card {
     background: rgba(255, 255, 255, 0.15);
-    padding: 1.5rem;
+    padding: 2rem;
     border-radius: 10px;
     backdrop-filter: blur(10px);
+    min-height: 300px;
 }
 
 .findings-card {
@@ -1240,17 +1241,18 @@ body {
 
 .insights-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
     margin-top: 1rem;
 }
 
 .insight-card {
     background: white;
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 6px;
     border: 1px solid #e9ecef;
     text-align: center;
+    min-height: 150px;
 }
 
 .insight-card strong {
