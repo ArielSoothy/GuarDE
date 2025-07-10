@@ -2448,9 +2448,17 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// Test function exposure
+console.log('Script.js loaded successfully');
+
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing Guardio Assignment Showcase...');
+    console.log('Testing function availability:', {
+        showOptimizationStep: typeof window.showOptimizationStep,
+        runStep: typeof window.runStep,
+        updateDashboard: typeof window.updateDashboard
+    });
     
     try {
         initializeMockData();
