@@ -820,7 +820,7 @@ body {
 }
 
 .business-insights-section * {
-    color: #ffff00 !important;
+    color: #000000 !important;
 }
 
 .business-insights-section h4,
@@ -858,7 +858,7 @@ body {
 }
 
 .insight-goal p {
-    color: #ffff00 !important;
+    color: #000000 !important;
     margin: 0;
     font-size: 1rem;
     line-height: 1.5;
@@ -901,7 +901,7 @@ body {
 
 .insight-card li {
     padding: 0.5rem 0;
-    color: #ffff00 !important;
+    color: #000000 !important;
     line-height: 1.4;
     position: relative;
     padding-left: 1.5rem;
