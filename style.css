@@ -812,11 +812,28 @@ body {
 /* Business Insights Section */
 .business-insights-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    color: #f8f9fa !important;
     border-radius: 12px;
     padding: 2rem;
     margin: 2rem 0;
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.business-insights-section * {
+    color: #f8f9fa !important;
+}
+
+.business-insights-section h4,
+.business-insights-section h5 {
+    color: #ffffff !important;
+}
+
+.business-insights-section .insight-goal h5 {
+    color: #ffd700 !important;
+}
+
+.business-insights-section .business-impact h5 {
+    color: #ffd700 !important;
 }
 
 .business-insights-section h4 {
