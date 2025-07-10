@@ -973,7 +973,7 @@ function generateDailyCPAData() {
         date.setDate(date.getDate() - i);
         const spend = Math.floor(Math.random() * 2000) + 1000;
         const activations = Math.floor(Math.random() * 40) + 20;
-        const cpa = spend / activations;
+        const cpa = activations > 0 ? spend / activations : null;
         
         data.push({
             date: date.toLocaleDateString(),
@@ -1936,7 +1936,8 @@ function generateCompleteCPAPreparationTable() {
     for (let day = 0; day < 30; day++) {
         const date = new Date();
         date.setDate(date.getDate() - day);
-        const dateStr = date.toISOString().split('T')[0];
+        date.setHours(0, 0, 0, 0); // Set to start of day for DATE type consistency
+        const dateStr = date.toISOString().split('T')[0]; // String for display
         
         sources.forEach(source => {
             campaigns.forEach(campaign => {
