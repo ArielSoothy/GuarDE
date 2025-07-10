@@ -5,6 +5,19 @@ const mockData = {
     attributionResults: []
 };
 
+// Utility function to parse source from referrer_url
+function parseSourceFromUrl(referrerUrl) {
+    const isMarketing = referrerUrl.includes('utm_source=');
+    const source = isMarketing ? 
+        referrerUrl.match(/utm_source=([^&]+)/)?.[1] || 'unknown' : 
+        'organic';
+    const campaign = isMarketing ? 
+        referrerUrl.match(/utm_campaign=([^&]+)/)?.[1] || null : 
+        null;
+    
+    return { source, campaign_id: campaign };
+}
+
 // Initialize mock data
 function initializeMockData() {
     // Generate sessions data - Guardio-specific
@@ -90,18 +103,12 @@ function initializeMockData() {
         
         // Parse source from referrer_url for each session
         const sessionsWithSource = userSessions.map(session => {
-            const isMarketing = session.referrer_url.includes('utm_source=');
-            const source = isMarketing ? 
-                session.referrer_url.match(/utm_source=([^&]+)/)?.[1] || 'unknown' : 
-                'organic';
-            const campaign = isMarketing ? 
-                session.referrer_url.match(/utm_campaign=([^&]+)/)?.[1] || null : 
-                null;
+            const parsed = parseSourceFromUrl(session.referrer_url);
             
             return {
                 ...session,
-                source: source,
-                campaign_id: campaign
+                source: parsed.source,
+                campaign_id: parsed.campaign_id
             };
         });
         
@@ -393,13 +400,15 @@ function getStep1Results() {
             session.referrer_url.substring(0, 50) + '...' : 
             session.referrer_url;
         
+        const parsed = parseSourceFromUrl(session.referrer_url);
+        
         html += `
             <tr>
                 <td>${session.session_id}</td>
                 <td>${session.user_id}</td>
                 <td title="${session.referrer_url}">${shortUrl}</td>
-                <td><span class="source-${session.source}">${session.source}</span></td>
-                <td>${session.campaign_id || 'NULL'}</td>
+                <td><span class="source-${parsed.source}">${parsed.source}</span></td>
+                <td>${parsed.campaign_id || 'NULL'}</td>
                 <td>${session.is_activated ? 'Yes' : 'No'}</td>
             </tr>
         `;
@@ -476,14 +485,15 @@ function getStep3Results() {
     
     sampleData.forEach((session, index) => {
         const daysBefore = Math.floor(Math.random() * 14);
-        const touchType = session.source === 'organic' ? 'Organic' : 'Marketing';
+        const parsed = parseSourceFromUrl(session.referrer_url);
+        const touchType = parsed.source === 'organic' ? 'Organic' : 'Marketing';
         
         html += `
             <tr>
                 <td>${session.user_id}</td>
                 <td>${new Date(session.session_start_time).toLocaleDateString()}</td>
-                <td><span class="source-${session.source}">${session.source}</span></td>
-                <td>${session.campaign_id || 'N/A'}</td>
+                <td><span class="source-${parsed.source}">${parsed.source}</span></td>
+                <td>${parsed.campaign_id || 'N/A'}</td>
                 <td>${daysBefore}</td>
                 <td><span class="touch-${touchType.toLowerCase()}">${touchType}</span></td>
             </tr>
