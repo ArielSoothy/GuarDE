@@ -1306,20 +1306,25 @@ body {
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: auto;
+    box-sizing: border-box !important;
+    position: relative;
 }
 
 .attribution-table-container {
     overflow-x: auto !important;
     overflow-y: visible;
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    margin-top: 1rem;
+    margin: 1rem 0;
     -webkit-overflow-scrolling: touch;
     display: block;
     position: relative;
+    box-sizing: border-box !important;
 }
 
 .attribution-table-container::-webkit-scrollbar {
@@ -1372,6 +1377,15 @@ body {
     font-size: 0.85rem;
     background: white;
     table-layout: auto;
+    margin: 0;
+}
+
+/* Ensure table container doesn't break parent alignment */
+.attribution-table-container .sortable-table,
+.complete-results-container .sortable-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
 }
 
 .complete-results-table th,
@@ -2208,6 +2222,25 @@ section {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+/* Force table containers to respect parent boundaries */
+.complete-results-demo,
+.complete-cpa-demo {
+    overflow: hidden !important;
+    position: relative;
+}
+
+.complete-results-demo .attribution-table-container,
+.complete-cpa-demo .attribution-table-container,
+.complete-results-demo .complete-results-container,
+.complete-cpa-demo .complete-results-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 /* Fix all content containers to be properly aligned */
