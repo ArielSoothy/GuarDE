@@ -1774,6 +1774,8 @@ function showCPAQuerySteps() {
         }
     });
 }
+
+function showCPAQueryStepsDetailed() {
     const resultsDiv = document.getElementById('cpa-query-results');
     if (!resultsDiv) return;
     
