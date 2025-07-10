@@ -413,6 +413,51 @@ body {
     border-radius: 8px;
     padding: 1rem;
     min-height: 200px;
+    overflow-x: auto; /* Add horizontal scroll for wide content */
+}
+
+/* Step results tables styling */
+.results-table-inner {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    min-width: 800px; /* Ensure minimum width for readability */
+}
+
+.results-table-inner th,
+.results-table-inner td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.results-table-inner th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.results-table-inner tr:hover {
+    background: #f8f9fa;
+}
+
+/* Make referrer URL column more readable */
+.results-table-inner td[title] {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
+}
+
+/* Step result containers */
+.step-result {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
 }
 
 /* Dashboard */
