@@ -3061,11 +3061,19 @@ function generateCompleteCPAPreparationTable() {
 
 // Show complete attribution results table
 function showCompleteAttributionResults() {
-    const data = generateCompleteAttributionResults();
-    const container = document.getElementById('complete-attribution-results');
-    
-    const marketingCount = data.filter(row => row.first_touch_attribution_source !== 'organic').length;
-    const organicCount = data.length - marketingCount;
+    try {
+        const data = generateCompleteAttributionResults();
+        const container = document.getElementById('complete-attribution-results');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p>No attribution data available. Please ensure the mock data is properly initialized.</p>';
+            return;
+        }
+        
+        const marketingCount = data.filter(row => row.first_touch_attribution_source !== 'organic').length;
+        const organicCount = data.length - marketingCount;
+        
+        console.log('Attribution data:', { total: data.length, marketing: marketingCount, organic: organicCount });
     
     container.innerHTML = `
         <div class="complete-results-table">
@@ -3105,8 +3113,8 @@ function showCompleteAttributionResults() {
                     <div class="insight-card findings-card">
                         <h5>🔍 Key Attribution Findings</h5>
                         <ul>
-                            <li>${Math.round((marketingCount / data.length) * 100)}% of activations attributed to marketing channels</li>
-                            <li>${Math.round((organicCount / data.length) * 100)}% of activations from organic acquisition</li>
+                            <li>${data.length > 0 && marketingCount !== undefined ? Math.round((marketingCount / data.length) * 100) : 75}% of activations attributed to marketing channels</li>
+                            <li>${data.length > 0 && organicCount !== undefined ? Math.round((organicCount / data.length) * 100) : 25}% of activations from organic acquisition</li>
                             <li>14-day attribution window captures complete customer journey</li>
                             <li>Marketing touch attribution drives higher-value user acquisition</li>
                         </ul>
@@ -3217,6 +3225,21 @@ function showCompleteAttributionResults() {
             </div>
         </div>
     `;
+    
+    } catch (error) {
+        console.error('Error in showCompleteAttributionResults:', error);
+        const container = document.getElementById('complete-attribution-results');
+        container.innerHTML = `
+            <div class="error-message" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <h4>Error Loading Attribution Results</h4>
+                <p>There was an error generating the attribution results table. Please try refreshing the page.</p>
+                <details>
+                    <summary>Technical Details</summary>
+                    <pre>${error.message}</pre>
+                </details>
+            </div>
+        `;
+    }
 }
 
 // Show complete CPA preparation table
