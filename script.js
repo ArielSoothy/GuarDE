@@ -47,6 +47,8 @@ class MockSQLEngine {
                 return this.cpaQueryAd(params);
             case 'cpa_preparation':
                 return this.cpaPreparationQuery(params);
+            case 'clean_attribution':
+                return this.cleanAttributionQuery(params);
             default:
                 throw new Error(`Unknown query type: ${queryType}`);
         }
@@ -631,6 +633,247 @@ class MockSQLEngine {
         }
         
         return insights;
+    }
+    
+    // Helper function to simulate REGEXP_EXTRACT
+    regexpExtract(text, pattern) {
+        const match = text.match(pattern);
+        return match ? match[1] : '';
+    }
+    
+    // Helper function to simulate DATE_SUB
+    dateSub(date, interval, value) {
+        const result = new Date(date);
+        if (interval === 'DAY') {
+            result.setDate(result.getDate() - value);
+        }
+        return result;
+    }
+    
+    // CLEANER SQL APPROACH - Implementation of the CTE-based query
+    cleanAttributionQuery(params) {
+        const limit = params.limit || 10;
+        
+        // Step 1: Parse sessions (simulate parsed_sessions CTE)
+        const parsedSessions = this.data.sessions.map(session => {
+            const utmSource = this.regexpExtract(session.referrer_url, /utm_source=([^&]+)/);
+            const utmCampaign = this.regexpExtract(session.referrer_url, /utm_campaign=([^&]+)/);
+            const utmAdset = this.regexpExtract(session.referrer_url, /utm_adset=([^&]+)/);
+            const utmAd = this.regexpExtract(session.referrer_url, /utm_ad=([^&]+)/);
+            const trafficType = session.referrer_url.includes('utm_source=') ? 'marketing' : 'organic';
+            
+            return {
+                ...session,
+                utm_source: utmSource,
+                utm_campaign: utmCampaign,
+                utm_adset: utmAdset,
+                utm_ad: utmAd,
+                traffic_type: trafficType
+            };
+        });
+        
+        // Step 2: Find activated users (simulate activated_users CTE)
+        const activatedUsers = parsedSessions
+            .filter(session => session.is_activated === 1)
+            .map(session => ({
+                user_id: session.user_id,
+                activation_time: session.session_start_time
+            }));
+        
+        // Step 3: Build attribution journey (simulate attribution_journey CTE)
+        const attributionJourney = [];
+        
+        activatedUsers.forEach(user => {
+            const userSessions = parsedSessions.filter(session => session.user_id === user.user_id);
+            
+            // Filter sessions within 14-day window before activation
+            const windowStart = this.dateSub(user.activation_time, 'DAY', 14);
+            const sessionsInWindow = userSessions.filter(session => {
+                const sessionDate = new Date(session.session_start_time);
+                return sessionDate >= windowStart && sessionDate <= new Date(user.activation_time);
+            });
+            
+            // Sort by session time and add touch ranks
+            sessionsInWindow.sort((a, b) => new Date(a.session_start_time) - new Date(b.session_start_time));
+            
+            sessionsInWindow.forEach((session, index) => {
+                attributionJourney.push({
+                    ...session,
+                    user_id: user.user_id,
+                    activation_time: user.activation_time,
+                    touch_rank_first: index + 1,
+                    touch_rank_last: sessionsInWindow.length - index
+                });
+            });
+        });
+        
+        // Step 4: Determine user journey type (simulate user_journey_type CTE)
+        const userJourneyType = new Map();
+        
+        attributionJourney.forEach(journey => {
+            const key = `${journey.user_id}_${journey.activation_time}`;
+            if (!userJourneyType.has(key)) {
+                userJourneyType.set(key, {
+                    user_id: journey.user_id,
+                    activation_time: journey.activation_time,
+                    has_marketing: false
+                });
+            }
+            
+            if (journey.traffic_type === 'marketing') {
+                userJourneyType.get(key).has_marketing = true;
+            }
+        });
+        
+        // Convert to array and add journey_type
+        const journeyTypes = Array.from(userJourneyType.values()).map(journey => ({
+            ...journey,
+            journey_type: journey.has_marketing ? 'marketing_driven' : 'organic_only'
+        }));
+        
+        // Step 5: Final attribution (simulate final_attribution CTE)
+        const finalAttribution = journeyTypes.map(userJourney => {
+            const userAttributionJourney = attributionJourney.filter(aj => 
+                aj.user_id === userJourney.user_id && 
+                aj.activation_time === userJourney.activation_time
+            );
+            
+            let firstTouch = null;
+            let lastTouch = null;
+            
+            if (userJourney.journey_type === 'organic_only') {
+                // For organic-only users, use first and last sessions regardless of type
+                firstTouch = userAttributionJourney.find(aj => aj.touch_rank_first === 1);
+                lastTouch = userAttributionJourney.find(aj => aj.touch_rank_last === 1);
+            } else {
+                // For marketing-driven users, prefer marketing touches
+                const marketingTouches = userAttributionJourney.filter(aj => aj.traffic_type === 'marketing');
+                if (marketingTouches.length > 0) {
+                    // Sort marketing touches by session time to get proper first/last
+                    marketingTouches.sort((a, b) => new Date(a.session_start_time) - new Date(b.session_start_time));
+                    firstTouch = marketingTouches[0]; // First marketing touch chronologically
+                    lastTouch = marketingTouches[marketingTouches.length - 1]; // Last marketing touch chronologically
+                }
+            }
+            
+            return {
+                user_id: userJourney.user_id,
+                activation_time: userJourney.activation_time,
+                journey_type: userJourney.journey_type,
+                first_touch_time: firstTouch ? firstTouch.session_start_time : null,
+                first_touch_source: firstTouch ? (firstTouch.utm_source || 'organic') : 'organic',
+                first_touch_campaign_id: firstTouch ? firstTouch.utm_campaign : null,
+                last_touch_time: lastTouch ? lastTouch.session_start_time : null,
+                last_touch_source: lastTouch ? (lastTouch.utm_source || 'organic') : 'organic',
+                last_touch_campaign_id: lastTouch ? lastTouch.utm_campaign : null
+            };
+        });
+        
+        // Calculate metrics
+        const totalUsers = finalAttribution.length;
+        const marketingDrivenUsers = finalAttribution.filter(fa => fa.journey_type === 'marketing_driven').length;
+        const organicOnlyUsers = finalAttribution.filter(fa => fa.journey_type === 'organic_only').length;
+        
+        const results = finalAttribution.slice(0, limit);
+        
+        const cleanQuery = `
+-- MUCH CLEANER APPROACH
+WITH parsed_sessions AS (
+  SELECT 
+    *,
+    REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)') AS utm_source,
+    REGEXP_EXTRACT(referrer_url, r'utm_campaign=([^&]+)') AS utm_campaign,
+    REGEXP_EXTRACT(referrer_url, r'utm_adset=([^&]+)') AS utm_adset,
+    REGEXP_EXTRACT(referrer_url, r'utm_ad=([^&]+)') AS utm_ad,
+    CASE WHEN referrer_url LIKE '%utm_source=%' THEN 'marketing' ELSE 'organic' END AS traffic_type
+  FROM sessions
+),
+
+activated_users AS (
+  SELECT user_id, session_start_time AS activation_time
+  FROM parsed_sessions 
+  WHERE is_activated = 1
+),
+
+attribution_journey AS (
+  SELECT 
+    au.user_id,
+    au.activation_time,
+    ps.*,
+    ROW_NUMBER() OVER (PARTITION BY au.user_id ORDER BY ps.session_start_time ASC) AS touch_rank_first,
+    ROW_NUMBER() OVER (PARTITION BY au.user_id ORDER BY ps.session_start_time DESC) AS touch_rank_last
+  FROM activated_users au
+  JOIN parsed_sessions ps ON au.user_id = ps.user_id
+  WHERE ps.session_start_time BETWEEN DATE_SUB(au.activation_time, INTERVAL 14 DAY) 
+                                  AND au.activation_time
+),
+
+user_journey_type AS (
+  SELECT 
+    user_id,
+    activation_time,
+    CASE WHEN COUNT(CASE WHEN traffic_type = 'marketing' THEN 1 END) > 0 
+         THEN 'marketing_driven' 
+         ELSE 'organic_only' END AS journey_type
+  FROM attribution_journey
+  GROUP BY user_id, activation_time
+),
+
+final_attribution AS (
+  SELECT 
+    ujt.user_id,
+    ujt.activation_time,
+    ujt.journey_type,
+    
+    -- First touch
+    first_touch.session_start_time AS first_touch_time,
+    COALESCE(NULLIF(first_touch.utm_source, ''), 'organic') AS first_touch_source,
+    first_touch.utm_campaign AS first_touch_campaign_id,
+    
+    -- Last touch  
+    last_touch.session_start_time AS last_touch_time,
+    COALESCE(NULLIF(last_touch.utm_source, ''), 'organic') AS last_touch_source,
+    last_touch.utm_campaign AS last_touch_campaign_id
+    
+  FROM user_journey_type ujt
+  LEFT JOIN attribution_journey first_touch ON ujt.user_id = first_touch.user_id 
+    AND first_touch.touch_rank_first = 1
+    AND (ujt.journey_type = 'organic_only' OR first_touch.traffic_type = 'marketing')
+  LEFT JOIN attribution_journey last_touch ON ujt.user_id = last_touch.user_id 
+    AND last_touch.touch_rank_last = 1  
+    AND (ujt.journey_type = 'organic_only' OR last_touch.traffic_type = 'marketing')
+)
+
+SELECT * FROM final_attribution LIMIT ${limit};`;
+        
+        return {
+            query: cleanQuery,
+            results: results,
+            rowCount: results.length,
+            topMetrics: {
+                totalUsers,
+                marketingDrivenUsers,
+                organicOnlyUsers,
+                marketingDrivenRate: `${((marketingDrivenUsers / totalUsers) * 100).toFixed(1)}%`,
+                avgTouchpointsPerUser: (attributionJourney.length / totalUsers).toFixed(1),
+                topFirstTouchSource: this.getTopAttributionSource(results, 'first_touch_source'),
+                topLastTouchSource: this.getTopAttributionSource(results, 'last_touch_source')
+            }
+        };
+    }
+    
+    // Helper function to get top attribution source
+    getTopAttributionSource(results, sourceField) {
+        const sourceCounts = {};
+        results.forEach(result => {
+            const source = result[sourceField];
+            if (source) {
+                sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+            }
+        });
+        
+        const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
+        return sorted.length > 0 ? sorted[0][0] : 'N/A';
     }
 }
 
@@ -3221,7 +3464,8 @@ function showCompleteAttributionResults() {
             </div>
             
             <div class="attribution-table-container">
-                <table id="attribution-results-table" class="sortable-table">
+                <div class="table-scroll-wrapper">
+                    <table id="attribution-results-table" class="sortable-table">
                     <thead>
                         <tr>
                             <th onclick="sortAttributionTable('user_id')" class="sortable-header">
@@ -3304,7 +3548,8 @@ function showCompleteAttributionResults() {
                             </tr>
                         `).join('')}
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
     `;

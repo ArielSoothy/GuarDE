@@ -2222,33 +2222,22 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Apply height limit ONLY to the table element itself */
-.attribution-table-container .sortable-table,
-.complete-results-container .sortable-table,
-.attribution-table-container table,
-.complete-results-container table {
+/* Apply height limit to a wrapper div around the table, not the table itself */
+.attribution-table-container .table-scroll-wrapper,
+.complete-results-container .table-scroll-wrapper {
     max-height: 500px;
     overflow-y: auto;
-    display: block;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
 }
 
-.attribution-table-container .sortable-table thead,
-.complete-results-container .sortable-table thead,
-.attribution-table-container table thead,
-.complete-results-container table thead {
-    display: table;
+.attribution-table-container table,
+.complete-results-container table,
+.attribution-table-container .sortable-table,
+.complete-results-container .sortable-table {
     width: 100%;
-    table-layout: fixed;
-}
-
-.attribution-table-container .sortable-table tbody,
-.complete-results-container .sortable-table tbody,
-.attribution-table-container table tbody,
-.complete-results-container table tbody {
-    display: block;
-    height: 500px;
-    overflow-y: auto;
-    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
 }
 
 /* For tables that should NOT be height-limited (normal tables) */
