@@ -2209,35 +2209,44 @@ body {
 }
 
 /* Only apply height limit to actual table elements, not the container with insights */
+.attribution-table-container,
+.complete-results-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
 .attribution-table-container table,
 .complete-results-container table,
 .results-table-container table,
 .table-wrapper table,
 .sortable-table {
-    max-height: 500px !important;
-    overflow-y: auto;
-    display: block;
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.attribution-table-container table thead,
-.complete-results-container table thead,
-.results-table-container table thead,
-.table-wrapper table thead,
-.sortable-table thead {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+.attribution-table-container table th,
+.complete-results-container table th,
+.results-table-container table th,
+.table-wrapper table th,
+.sortable-table th {
+    min-width: 120px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.attribution-table-container table tbody,
-.complete-results-container table tbody,
-.results-table-container table tbody,
-.table-wrapper table tbody,
-.sortable-table tbody {
-    display: block;
-    height: 500px;
-    overflow-y: auto;
-    width: 100%;
+.attribution-table-container table td,
+.complete-results-container table td,
+.results-table-container table td,
+.table-wrapper table td,
+.sortable-table td {
+    min-width: 120px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
 }
 
 /* Footer */
