@@ -455,8 +455,17 @@ let cpaChart, spendChart, performanceChart;
 
 // Query Execution Interface
 function executeCustomQuery(queryType, customParams = {}) {
+    console.log('Executing query:', queryType, customParams);
+    
+    if (!window.sqlEngine) {
+        console.error('SQL Engine not initialized');
+        alert('SQL Engine not initialized. Please refresh the page.');
+        return;
+    }
+    
     try {
         const queryResult = window.sqlEngine.executeQuery(queryType, customParams);
+        console.log('Query result:', queryResult);
         
         // Create modal or popup to show query results
         showQueryResultsModal(queryResult, queryType);
@@ -833,9 +842,14 @@ function runStep(stepNumber) {
 }
 
 function getStep1Results() {
-    const queryResult = window.sqlEngine.executeQuery('parse_sessions', { limit: 8 });
+    if (!window.sqlEngine) {
+        return '<div class="error">SQL Engine not initialized. Please refresh the page.</div>';
+    }
     
-    let html = `
+    try {
+        const queryResult = window.sqlEngine.executeQuery('parse_sessions', { limit: 8 });
+        
+        let html = `
         <div class="step-result">
             <h4>Step 1: Parse UTM Parameters from referrer_url</h4>
             <div class="step-description">
@@ -883,8 +897,13 @@ function getStep1Results() {
         `;
     });
     
-    html += '</tbody></table></div>';
-    return html;
+        html += '</tbody></table></div>';
+        return html;
+        
+    } catch (error) {
+        console.error('Error in getStep1Results:', error);
+        return '<div class="error">Error executing query. Please try again.</div>';
+    }
 }
 
 function getStep2Results() {
@@ -2429,13 +2448,32 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    initializeMockData();
-    initializeCharts();
+    console.log('Initializing Guardio Assignment Showcase...');
+    
+    try {
+        initializeMockData();
+        console.log('Mock data initialized successfully');
+        console.log('SQL Engine available:', !!window.sqlEngine);
+    } catch (error) {
+        console.error('Error initializing mock data:', error);
+    }
+    
+    try {
+        initializeCharts();
+        console.log('Charts initialized successfully');
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
     
     // Initialize with default data
     setTimeout(() => {
-        updateDashboard();
-        populateTable('sessions');
+        try {
+            updateDashboard();
+            populateTable('sessions');
+            console.log('Dashboard initialized successfully');
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+        }
     }, 500);
     
     // Add CSS for dynamic elements
