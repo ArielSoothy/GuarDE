@@ -35,7 +35,9 @@ function initializeMockData() {
     // Generate campaign spend data
     const dates = [];
     for (let i = 0; i < 30; i++) {
-        dates.push(new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        date.setHours(0, 0, 0, 0); // Set to start of day for DATE type
+        dates.push(date);
     }
     
     sources.forEach(source => {
