@@ -2210,27 +2210,56 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Only apply height limit to actual table elements, not the container with insights */
+/* Remove height limit from containers - insights should be part of normal flow */
 .attribution-table-container,
 .complete-results-container {
-    max-height: 1000px;
-    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Apply height limit ONLY to the table element itself */
+.attribution-table-container .sortable-table,
+.complete-results-container .sortable-table,
 .attribution-table-container table,
-.complete-results-container table,
+.complete-results-container table {
+    max-height: 500px;
+    overflow-y: auto;
+    display: block;
+}
+
+.attribution-table-container .sortable-table thead,
+.complete-results-container .sortable-table thead,
+.attribution-table-container table thead,
+.complete-results-container table thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.attribution-table-container .sortable-table tbody,
+.complete-results-container .sortable-table tbody,
+.attribution-table-container table tbody,
+.complete-results-container table tbody {
+    display: block;
+    height: 500px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+/* For tables that should NOT be height-limited (normal tables) */
 .results-table-container table,
-.table-wrapper table,
-.sortable-table {
+.table-wrapper table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.attribution-table-container table th,
-.complete-results-container table th,
 .results-table-container table th,
-.table-wrapper table th,
-.sortable-table th {
+.table-wrapper table th {
     min-width: 120px;
     padding: 8px 12px;
     background: #f8f9fa;
@@ -2240,15 +2269,38 @@ body {
     z-index: 10;
 }
 
-.attribution-table-container table td,
-.complete-results-container table td,
 .results-table-container table td,
-.table-wrapper table td,
-.sortable-table td {
+.table-wrapper table td {
     min-width: 120px;
     padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
     white-space: nowrap;
+}
+
+/* For scrollable table cells in the limited height tables */
+.attribution-table-container .sortable-table td,
+.complete-results-container .sortable-table td,
+.attribution-table-container table td,
+.complete-results-container table td {
+    min-width: 120px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+    display: table-cell;
+}
+
+.attribution-table-container .sortable-table th,
+.complete-results-container .sortable-table th,
+.attribution-table-container table th,
+.complete-results-container table th {
+    min-width: 120px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: table-cell;
 }
 
 /* Footer */
