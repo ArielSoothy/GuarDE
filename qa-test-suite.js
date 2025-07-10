@@ -50,7 +50,7 @@ const QATestSuite = {
                 viewport: `${window.innerWidth}x${window.innerHeight}`,
                 pixelRatio: window.devicePixelRatio,
                 language: navigator.language,
-                platform: navigator.platform,
+                platform: navigator.userAgentData?.platform || navigator.platform,
                 cookieEnabled: navigator.cookieEnabled,
                 onLine: navigator.onLine
             }
@@ -207,16 +207,45 @@ function testCharts() {
     });
     
     // Test Chart.js instances
-    if (typeof Chart !== 'undefined' && Chart.instances) {
-        QATestSuite.log(`Found ${Chart.instances.length} Chart.js instances`, 'info');
+    if (typeof Chart !== 'undefined') {
+        // Check different ways Chart.js might store instances
+        let chartInstances = [];
         
-        Chart.instances.forEach((chart, index) => {
-            if (chart.data && chart.data.datasets) {
-                const datasetCount = chart.data.datasets.length;
-                const dataPoints = chart.data.datasets.reduce((sum, dataset) => sum + (dataset.data?.length || 0), 0);
-                QATestSuite.log(`Chart ${index + 1}: ${datasetCount} datasets, ${dataPoints} data points`, 'info');
+        if (Chart.instances && Array.isArray(Chart.instances)) {
+            chartInstances = Chart.instances;
+        } else if (Chart.registry && Chart.registry.getAll) {
+            // Chart.js v3+ approach
+            try {
+                chartInstances = Chart.registry.getAll();
+            } catch (e) {
+                QATestSuite.log('Could not access Chart.js registry', 'info');
             }
-        });
+        } else {
+            // Look for global chart variables
+            const globalCharts = [];
+            if (typeof cpaChart !== 'undefined') globalCharts.push(cpaChart);
+            if (typeof spendChart !== 'undefined') globalCharts.push(spendChart);
+            if (typeof performanceChart !== 'undefined') globalCharts.push(performanceChart);
+            chartInstances = globalCharts;
+        }
+        
+        if (chartInstances.length > 0) {
+            QATestSuite.log(`Found ${chartInstances.length} Chart.js instances`, 'info');
+            
+            chartInstances.forEach((chart, index) => {
+                if (chart && chart.data && chart.data.datasets) {
+                    const datasetCount = chart.data.datasets.length;
+                    const dataPoints = chart.data.datasets.reduce((sum, dataset) => sum + (dataset.data?.length || 0), 0);
+                    QATestSuite.log(`Chart ${index + 1}: ${datasetCount} datasets, ${dataPoints} data points`, 'info');
+                } else {
+                    QATestSuite.log(`Chart ${index + 1}: No data available or not properly initialized`, 'warning');
+                }
+            });
+        } else {
+            QATestSuite.log('No Chart.js instances found (charts may not be initialized yet)', 'warning');
+        }
+    } else {
+        QATestSuite.log('Chart.js library not found', 'warning');
     }
     
     QATestSuite.log('Chart tests completed', 'info');
@@ -230,7 +259,19 @@ function testPerformance() {
     QATestSuite.log('Starting performance tests...', 'info');
     
     // Test page load performance
-    if (performance.timing) {
+    if (performance.getEntriesByType) {
+        // Use modern Navigation Timing API
+        const navEntries = performance.getEntriesByType('navigation');
+        if (navEntries.length > 0) {
+            const navEntry = navEntries[0];
+            const loadTime = navEntry.loadEventEnd - navEntry.fetchStart;
+            const domReady = navEntry.domContentLoadedEventEnd - navEntry.fetchStart;
+            
+            QATestSuite.log(`Page load time: ${Math.round(loadTime)}ms`, loadTime > 5000 ? 'warning' : 'info');
+            QATestSuite.log(`DOM ready time: ${Math.round(domReady)}ms`, domReady > 2000 ? 'warning' : 'info');
+        }
+    } else if (performance.timing) {
+        // Fallback to deprecated API
         const timing = performance.timing;
         const loadTime = timing.loadEventEnd - timing.navigationStart;
         const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
@@ -305,6 +346,8 @@ function testDataValidation() {
         
         if (undefinedSources.length > 0) {
             QATestSuite.log(`Found ${undefinedSources.length} sessions with undefined sources`, 'error');
+        } else {
+            QATestSuite.log('All sessions have valid parsed sources', 'success');
         }
     }
     
@@ -319,6 +362,8 @@ function testDataValidation() {
         
         if (undefinedAttributions.length > 0) {
             QATestSuite.log(`Found ${undefinedAttributions.length} attribution records with undefined sources`, 'error');
+        } else {
+            QATestSuite.log('All attribution records have valid sources', 'success');
         }
     }
     
