@@ -1273,7 +1273,6 @@ body {
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     width: 100%;
-    min-width: 800px;
     overflow-x: auto;
 }
 
@@ -1335,7 +1334,6 @@ body {
 .complete-results-table table,
 .sortable-table {
     width: max-content;
-    min-width: 1200px;
     border-collapse: collapse;
     font-size: 0.85rem;
     background: white;
@@ -1350,9 +1348,8 @@ body {
     text-align: left;
     border-bottom: 1px solid #e9ecef;
     word-wrap: break-word;
-    width: 100px;
-    min-width: 80px;
-    max-width: 150px;
+    min-width: 120px;
+    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
