@@ -167,6 +167,40 @@ body {
     transform: translateY(-2px);
 }
 
+.btn-outline {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover,
+.btn-outline.active {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.sql-header {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+    border-left: 4px solid #667eea;
+}
+
+.sql-header p {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
 /* Overview Section */
 .overview {
     padding: 4rem 0;
