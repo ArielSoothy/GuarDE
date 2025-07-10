@@ -184,7 +184,25 @@ class MockSQLEngine {
     
     cpaQueryDaily(params) {
         // Generate daily CPA aggregation
-        const dailyData = this.generateDailyCPAData();
+        const dates = [];
+        for (let i = 0; i < 14; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            dates.push(date.toISOString().split('T')[0]);
+        }
+        
+        const dailyData = dates.map(date => {
+            const spend = Math.random() * 5000 + 1000;
+            const activations = Math.floor(Math.random() * 50) + 10;
+            const cpa = spend / activations;
+            
+            return {
+                date: date,
+                spend: Math.round(spend),
+                activations: activations,
+                cpa: Math.round(cpa * 100) / 100
+            };
+        });
         
         return {
             query: `SELECT date, SUM(total_spend) as spend, SUM(activations) as activations,
