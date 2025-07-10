@@ -280,6 +280,19 @@ body {
     border-top: 1px solid #e0e0e0;
 }
 
+.task-content {
+    width: 100%;
+    max-width: 100%;
+}
+
+.task-description {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #667eea;
+}
+
 .task-section:nth-child(even) {
     background: #f9f9f9;
 }
@@ -318,6 +331,9 @@ body {
     border-radius: 8px;
     overflow: hidden;
     margin: 1rem 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .code-container pre {
@@ -333,11 +349,19 @@ body {
 }
 
 /* Interactive Demo */
-.interactive-demo {
+.interactive-demo,
+.dashboard-demo,
+.complete-results-demo,
+.complete-cpa-demo,
+.sql-demo {
     background: white;
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .demo-controls {
@@ -832,6 +856,9 @@ body {
     padding: 2rem;
     margin: 2rem 0;
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .business-insights-section * {
@@ -2152,7 +2179,7 @@ body {
     background: #f8f9fa;
 }
 
-/* Universal table container fix */
+/* Universal table container fix - consistent width and alignment */
 .attribution-table-container,
 .complete-results-container,
 .results-table-container,
@@ -2160,6 +2187,10 @@ body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
+    max-width: 100%;
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Footer */
@@ -2167,6 +2198,81 @@ body {
     background: #2c3e50;
     color: white;
     padding: 3rem 0;
+    text-align: center;
+}
+
+/* COMPREHENSIVE ALIGNMENT AND AESTHETIC FIXES */
+
+/* Ensure all sections have consistent spacing and alignment */
+section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Fix all content containers to be properly aligned */
+.sql-demo,
+.dashboard-demo,
+.complete-results-demo,
+.complete-cpa-demo,
+.performance-comparison,
+.optimization-overview,
+.scalability-projection {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure all wide elements maintain container width */
+.sql-header,
+.dashboard-controls,
+.demo-controls,
+.optimization-controls {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+}
+
+/* Fix button alignment */
+.demo-controls,
+.dashboard-controls,
+.optimization-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Ensure charts and visualizations stay within bounds */
+.chart-container,
+.dashboard-grid,
+.optimization-grid,
+.projection-grid {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+}
+
+/* Fix stats display alignment */
+.table-stats,
+.hero-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.table-stat,
+.stat {
+    flex: 1;
+    min-width: 120px;
     text-align: center;
 }
 
