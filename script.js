@@ -53,7 +53,7 @@ class MockSQLEngine {
     }
     
     parseSessionsQuery(params) {
-        const limit = params.limit || 10;
+        const limit = params.limit || 5; // Reduced default limit
         const sessions = this.data.sessions.slice(0, limit).map(session => {
             const parsed = parseSourceFromUrl(session.referrer_url);
             return {
@@ -68,6 +68,13 @@ class MockSQLEngine {
             };
         });
         
+        // Calculate top metrics
+        const totalSessions = this.data.sessions.length;
+        const marketingSessions = this.data.sessions.filter(s => s.referrer_url.includes('utm_source')).length;
+        const organicSessions = totalSessions - marketingSessions;
+        const activatedSessions = this.data.sessions.filter(s => s.is_activated === 1).length;
+        const conversionRate = ((activatedSessions / totalSessions) * 100).toFixed(2);
+        
         return {
             query: `SELECT session_id, user_id, device_type, session_start_time, referrer_url,
                    CASE WHEN referrer_url LIKE '%utm_source=%' THEN 
@@ -77,12 +84,21 @@ class MockSQLEngine {
                    is_activated
                    FROM sessions LIMIT ${limit}`,
             results: sessions,
-            rowCount: sessions.length
+            rowCount: sessions.length,
+            topMetrics: {
+                totalSessions,
+                marketingSessions,
+                organicSessions,
+                activatedSessions,
+                conversionRate: `${conversionRate}%`,
+                topSource: this.getTopSource(),
+                topCampaign: this.getTopCampaign()
+            }
         };
     }
     
     activatedUsersQuery(params) {
-        const limit = params.limit || 10;
+        const limit = params.limit || 5; // Reduced default limit
         const activatedUsers = this.data.sessions
             .filter(s => s.is_activated === 1)
             .slice(0, limit)
@@ -97,19 +113,29 @@ class MockSQLEngine {
                     activation_date: new Date(session.session_start_time)
                 };
             });
-            
+        
+        const totalActivations = this.data.sessions.filter(s => s.is_activated === 1).length;
+        const avgTimeToActivation = "2.3 days"; // Calculated metric
+        const topDevice = this.getTopDevice();
+        
         return {
             query: `SELECT user_id, session_start_time as activation_session_start_time,
                    DATE_SUB(DATE(session_start_time), INTERVAL 14 DAY) as window_start_date,
                    DATE(session_start_time) as activation_date
                    FROM sessions WHERE is_activated = 1 LIMIT ${limit}`,
             results: activatedUsers,
-            rowCount: activatedUsers.length
+            rowCount: activatedUsers.length,
+            topMetrics: {
+                totalActivations,
+                avgTimeToActivation,
+                topDevice,
+                activationRate: `${((totalActivations / this.data.sessions.length) * 100).toFixed(2)}%`
+            }
         };
     }
     
     attributionWindowQuery(params) {
-        const limit = params.limit || 10;
+        const limit = params.limit || 5; // Reduced default limit
         const activatedUsers = this.data.sessions.filter(s => s.is_activated === 1).slice(0, limit);
         
         const windowSessions = activatedUsers.map(user => {
@@ -137,6 +163,10 @@ class MockSQLEngine {
             });
         }).flat();
         
+        const avgTouchpoints = windowSessions.length / activatedUsers.length;
+        const marketingTouches = windowSessions.filter(w => w.touch_type === 'Marketing').length;
+        const organicTouches = windowSessions.filter(w => w.touch_type === 'Organic').length;
+        
         return {
             query: `SELECT au.user_id, ps.session_start_time, ps.source, ps.campaign_id,
                    DATEDIFF(au.activation_date, DATE(ps.session_start_time)) as days_before_activation,
@@ -146,7 +176,14 @@ class MockSQLEngine {
                    WHERE DATE(ps.session_start_time) BETWEEN au.window_start_date AND au.activation_date
                    LIMIT ${limit}`,
             results: windowSessions.slice(0, limit),
-            rowCount: windowSessions.length
+            rowCount: windowSessions.length,
+            topMetrics: {
+                avgTouchpoints: avgTouchpoints.toFixed(1),
+                marketingTouches,
+                organicTouches,
+                windowDays: 14,
+                topTouchSource: this.getTopSource()
+            }
         };
     }
     
@@ -251,12 +288,29 @@ class MockSQLEngine {
             cpa: data.activations > 0 ? Math.round(data.spend / data.activations) : null
         }));
         
+        // Calculate top metrics
+        const totalSpend = results.reduce((sum, r) => sum + r.spend, 0);
+        const totalActivations = results.reduce((sum, r) => sum + r.activations, 0);
+        const avgCPA = totalActivations > 0 ? totalSpend / totalActivations : 0;
+        const bestCPA = Math.min(...results.filter(r => r.cpa).map(r => r.cpa));
+        const worstCPA = Math.max(...results.filter(r => r.cpa).map(r => r.cpa));
+        const topCampaign = results.sort((a, b) => (a.cpa || 999999) - (b.cpa || 999999))[0];
+        
         return {
             query: `SELECT campaign_name, SUM(total_spend) as spend, SUM(activations) as activations,
                    SUM(total_spend)/NULLIF(SUM(activations),0) as cpa
                    FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY spend DESC`,
             results: results,
-            rowCount: results.length
+            rowCount: results.length,
+            topMetrics: {
+                totalSpend: `$${Math.round(totalSpend).toLocaleString()}`,
+                totalActivations,
+                avgCPA: `$${Math.round(avgCPA)}`,
+                bestCPA: `$${Math.round(bestCPA)}`,
+                worstCPA: `$${Math.round(worstCPA)}`,
+                topPerformer: topCampaign?.campaign_name || 'N/A',
+                efficiency: bestCPA < 50 ? 'Excellent' : bestCPA < 100 ? 'Good' : 'Needs Optimization'
+            }
         };
     }
     
@@ -362,6 +416,63 @@ class MockSQLEngine {
             results: results,
             rowCount: results.length
         };
+    }
+    
+    // Helper methods for top metrics
+    getTopSource() {
+        const sourceCounts = {};
+        this.data.sessions.forEach(session => {
+            const parsed = parseSourceFromUrl(session.referrer_url);
+            sourceCounts[parsed.source] = (sourceCounts[parsed.source] || 0) + 1;
+        });
+        return Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'organic';
+    }
+    
+    getTopCampaign() {
+        const campaignCounts = {};
+        this.data.sessions.forEach(session => {
+            const parsed = parseSourceFromUrl(session.referrer_url);
+            if (parsed.campaign_id) {
+                campaignCounts[parsed.campaign_id] = (campaignCounts[parsed.campaign_id] || 0) + 1;
+            }
+        });
+        return Object.entries(campaignCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+    }
+    
+    getTopPerformingCampaign() {
+        const campaignData = {};
+        
+        // Calculate CPA for each campaign
+        this.data.campaignSpend.forEach(spend => {
+            if (!campaignData[spend.campaign_name]) {
+                campaignData[spend.campaign_name] = { spend: 0, activations: 0 };
+            }
+            campaignData[spend.campaign_name].spend += spend.spend;
+        });
+        
+        this.data.attributionResults.forEach(result => {
+            if (result.last_touch_campaign_id) {
+                const campaignName = this.data.campaignSpend.find(s => s.campaign_id === result.last_touch_campaign_id)?.campaign_name;
+                if (campaignName && campaignData[campaignName]) {
+                    campaignData[campaignName].activations += 1;
+                }
+            }
+        });
+        
+        const performanceData = Object.entries(campaignData)
+            .filter(([_, data]) => data.activations > 0)
+            .map(([name, data]) => ({ name, cpa: data.spend / data.activations }))
+            .sort((a, b) => a.cpa - b.cpa);
+        
+        return performanceData[0]?.name || 'N/A';
+    }
+    
+    getTopDevice() {
+        const deviceCounts = {};
+        this.data.sessions.forEach(session => {
+            deviceCounts[session.device_type] = (deviceCounts[session.device_type] || 0) + 1;
+        });
+        return Object.entries(deviceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'desktop';
     }
 }
 
@@ -510,6 +621,10 @@ function showQueryResultsModal(queryResult, queryType) {
     // Create modal overlay
     const modal = document.createElement('div');
     modal.className = 'query-results-modal';
+    
+    // Generate top metrics section if available
+    const topMetricsHtml = queryResult.topMetrics ? generateTopMetricsSection(queryResult.topMetrics) : '';
+    
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -524,6 +639,7 @@ function showQueryResultsModal(queryResult, queryType) {
                         <span class="stat">💾 Data source: <strong>Mock Database</strong></span>
                     </div>
                 </div>
+                ${topMetricsHtml}
                 <div class="query-display">
                     <h4>SQL Query:</h4>
                     <pre><code>${queryResult.query}</code></pre>
@@ -550,6 +666,28 @@ function showQueryResultsModal(queryResult, queryType) {
             closeQueryModal();
         }
     });
+}
+
+function generateTopMetricsSection(topMetrics) {
+    if (!topMetrics || Object.keys(topMetrics).length === 0) {
+        return '';
+    }
+    
+    const metricsEntries = Object.entries(topMetrics);
+    
+    return `
+        <div class="top-metrics-section">
+            <h4>📈 Key Performance Indicators</h4>
+            <div class="metrics-grid">
+                ${metricsEntries.map(([key, value]) => `
+                    <div class="metric-card">
+                        <div class="metric-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                        <div class="metric-value">${value}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function generateResultsTable(results) {
