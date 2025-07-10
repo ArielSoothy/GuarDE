@@ -217,6 +217,12 @@ class MockSQLEngine {
         // Generate campaign-level CPA aggregation
         const campaignData = {};
         
+        // First, map campaign IDs to names for proper matching
+        const campaignIdToName = {};
+        this.data.campaignSpend.forEach(spend => {
+            campaignIdToName[spend.campaign_id] = spend.campaign_name;
+        });
+        
         this.data.campaignSpend.forEach(spend => {
             const campaign = spend.campaign_name;
             if (!campaignData[campaign]) {
@@ -225,11 +231,16 @@ class MockSQLEngine {
             campaignData[campaign].spend += spend.spend;
         });
         
-        // Add activations from attribution results
+        // Add activations from attribution results using campaign_id matching
         this.data.attributionResults.forEach(result => {
-            const campaign = result.last_touch_campaign_name || 'Unknown';
-            if (campaignData[campaign]) {
-                campaignData[campaign].activations += 1;
+            if (result.last_touch_campaign_id && campaignIdToName[result.last_touch_campaign_id]) {
+                const campaignName = campaignIdToName[result.last_touch_campaign_id];
+                if (campaignData[campaignName]) {
+                    campaignData[campaignName].activations += 1;
+                } else {
+                    // Create entry if it doesn't exist (edge case)
+                    campaignData[campaignName] = { spend: 0, activations: 1 };
+                }
             }
         });
         
@@ -296,9 +307,10 @@ class MockSQLEngine {
         // Add activations from attribution results
         this.data.attributionResults.forEach(result => {
             const source = result.last_touch_attribution_source || 'organic';
-            if (sourceData[source]) {
-                sourceData[source].activations += 1;
+            if (!sourceData[source]) {
+                sourceData[source] = { spend: 0, activations: 0 };
             }
+            sourceData[source].activations += 1;
         });
         
         const results = Object.entries(sourceData).map(([source, data]) => ({
