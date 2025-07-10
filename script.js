@@ -87,11 +87,29 @@ function initializeMockData() {
     const activatedUsers = mockData.sessions.filter(s => s.is_activated === 1);
     activatedUsers.forEach(user => {
         const userSessions = mockData.sessions.filter(s => s.user_id === user.user_id);
-        const marketingSessions = userSessions.filter(s => s.source !== 'organic');
+        
+        // Parse source from referrer_url for each session
+        const sessionsWithSource = userSessions.map(session => {
+            const isMarketing = session.referrer_url.includes('utm_source=');
+            const source = isMarketing ? 
+                session.referrer_url.match(/utm_source=([^&]+)/)?.[1] || 'unknown' : 
+                'organic';
+            const campaign = isMarketing ? 
+                session.referrer_url.match(/utm_campaign=([^&]+)/)?.[1] || null : 
+                null;
+            
+            return {
+                ...session,
+                source: source,
+                campaign_id: campaign
+            };
+        });
+        
+        const marketingSessions = sessionsWithSource.filter(s => s.source !== 'organic');
         
         const hasMarketing = marketingSessions.length > 0;
-        const firstTouch = hasMarketing ? marketingSessions[0] : user;
-        const lastTouch = hasMarketing ? marketingSessions[marketingSessions.length - 1] : user;
+        const firstTouch = hasMarketing ? marketingSessions[0] : sessionsWithSource[0];
+        const lastTouch = hasMarketing ? marketingSessions[marketingSessions.length - 1] : sessionsWithSource[0];
         
         mockData.attributionResults.push({
             user_id: user.user_id,
