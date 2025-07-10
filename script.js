@@ -18,6 +18,252 @@ function parseSourceFromUrl(referrerUrl) {
     return { source, campaign_id: campaign };
 }
 
+// SQL Query Engine for Mock Database
+class MockSQLEngine {
+    constructor(data) {
+        this.data = data;
+    }
+    
+    // Execute SQL-like queries against mock data
+    executeQuery(queryType, params = {}) {
+        switch (queryType) {
+            case 'parse_sessions':
+                return this.parseSessionsQuery(params);
+            case 'activated_users':
+                return this.activatedUsersQuery(params);
+            case 'attribution_window':
+                return this.attributionWindowQuery(params);
+            case 'final_attribution':
+                return this.finalAttributionQuery(params);
+            case 'complete_attribution':
+                return this.completeAttributionQuery(params);
+            case 'cpa_daily':
+                return this.cpaQueryDaily(params);
+            case 'cpa_campaign':
+                return this.cpaQueryCampaign(params);
+            case 'cpa_source':
+                return this.cpaQuerySource(params);
+            case 'cpa_ad':
+                return this.cpaQueryAd(params);
+            case 'cpa_preparation':
+                return this.cpaPreparationQuery(params);
+            default:
+                throw new Error(`Unknown query type: ${queryType}`);
+        }
+    }
+    
+    parseSessionsQuery(params) {
+        const limit = params.limit || 10;
+        const sessions = this.data.sessions.slice(0, limit).map(session => {
+            const parsed = parseSourceFromUrl(session.referrer_url);
+            return {
+                session_id: session.session_id,
+                user_id: session.user_id,
+                device_type: session.device_type,
+                session_start_time: session.session_start_time,
+                referrer_url: session.referrer_url,
+                source: parsed.source,
+                campaign_id: parsed.campaign_id,
+                is_activated: session.is_activated
+            };
+        });
+        
+        return {
+            query: `SELECT session_id, user_id, device_type, session_start_time, referrer_url,
+                   CASE WHEN referrer_url LIKE '%utm_source=%' THEN 
+                        REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)') ELSE 'organic' END as source,
+                   CASE WHEN referrer_url LIKE '%utm_campaign=%' THEN 
+                        REGEXP_EXTRACT(referrer_url, r'utm_campaign=([^&]+)') END as campaign_id,
+                   is_activated
+                   FROM sessions LIMIT ${limit}`,
+            results: sessions,
+            rowCount: sessions.length
+        };
+    }
+    
+    activatedUsersQuery(params) {
+        const limit = params.limit || 10;
+        const activatedUsers = this.data.sessions
+            .filter(s => s.is_activated === 1)
+            .slice(0, limit)
+            .map(session => {
+                const windowStart = new Date(session.session_start_time);
+                windowStart.setDate(windowStart.getDate() - 14);
+                
+                return {
+                    user_id: session.user_id,
+                    activation_session_start_time: session.session_start_time,
+                    window_start_date: windowStart,
+                    activation_date: new Date(session.session_start_time)
+                };
+            });
+            
+        return {
+            query: `SELECT user_id, session_start_time as activation_session_start_time,
+                   DATE_SUB(DATE(session_start_time), INTERVAL 14 DAY) as window_start_date,
+                   DATE(session_start_time) as activation_date
+                   FROM sessions WHERE is_activated = 1 LIMIT ${limit}`,
+            results: activatedUsers,
+            rowCount: activatedUsers.length
+        };
+    }
+    
+    attributionWindowQuery(params) {
+        const limit = params.limit || 10;
+        const activatedUsers = this.data.sessions.filter(s => s.is_activated === 1).slice(0, limit);
+        
+        const windowSessions = activatedUsers.map(user => {
+            const userSessions = this.data.sessions.filter(s => s.user_id === user.user_id);
+            const windowStart = new Date(user.session_start_time);
+            windowStart.setDate(windowStart.getDate() - 14);
+            
+            const sessionsInWindow = userSessions.filter(s => 
+                new Date(s.session_start_time) >= windowStart && 
+                new Date(s.session_start_time) <= new Date(user.session_start_time)
+            );
+            
+            return sessionsInWindow.map(session => {
+                const parsed = parseSourceFromUrl(session.referrer_url);
+                const daysBefore = Math.floor((new Date(user.session_start_time) - new Date(session.session_start_time)) / (1000 * 60 * 60 * 24));
+                
+                return {
+                    user_id: user.user_id,
+                    session_start_time: session.session_start_time,
+                    source: parsed.source,
+                    campaign_id: parsed.campaign_id,
+                    days_before_activation: daysBefore,
+                    touch_type: parsed.source === 'organic' ? 'Organic' : 'Marketing'
+                };
+            });
+        }).flat();
+        
+        return {
+            query: `SELECT au.user_id, ps.session_start_time, ps.source, ps.campaign_id,
+                   DATEDIFF(au.activation_date, DATE(ps.session_start_time)) as days_before_activation,
+                   CASE WHEN ps.source = 'organic' THEN 'Organic' ELSE 'Marketing' END as touch_type
+                   FROM activated_users au
+                   JOIN parsed_sessions ps ON au.user_id = ps.user_id
+                   WHERE DATE(ps.session_start_time) BETWEEN au.window_start_date AND au.activation_date
+                   LIMIT ${limit}`,
+            results: windowSessions.slice(0, limit),
+            rowCount: windowSessions.length
+        };
+    }
+    
+    finalAttributionQuery(params) {
+        const limit = params.limit || 10;
+        const attributionResults = this.data.attributionResults.slice(0, limit).map(result => ({
+            user_id: result.user_id,
+            first_touch_source: result.first_touch_attribution_source,
+            first_touch_campaign: result.first_touch_campaign_id,
+            last_touch_source: result.last_touch_attribution_source,
+            last_touch_campaign: result.last_touch_campaign_id,
+            marketing_touchpoints: result.first_touch_attribution_source !== 'organic' ? 1 : 0
+        }));
+        
+        return {
+            query: `SELECT user_id, first_touch_attribution_source, first_touch_campaign_id,
+                   last_touch_attribution_source, last_touch_campaign_id,
+                   CASE WHEN first_touch_attribution_source != 'organic' THEN 1 ELSE 0 END as marketing_touchpoints
+                   FROM attribution_results LIMIT ${limit}`,
+            results: attributionResults,
+            rowCount: attributionResults.length
+        };
+    }
+    
+    completeAttributionQuery(params) {
+        const limit = params.limit || 10;
+        return {
+            query: `SELECT user_id, activation_session_start_time, first_touch_attribution_source,
+                   first_touch_campaign_id, last_touch_attribution_source, last_touch_campaign_id
+                   FROM attribution_results LIMIT ${limit}`,
+            results: this.data.attributionResults.slice(0, limit),
+            rowCount: this.data.attributionResults.length
+        };
+    }
+    
+    cpaQueryDaily(params) {
+        // Generate daily CPA aggregation
+        const dailyData = this.generateDailyCPAData();
+        
+        return {
+            query: `SELECT date, SUM(total_spend) as spend, SUM(activations) as activations,
+                   SUM(total_spend)/NULLIF(SUM(activations),0) as cpa
+                   FROM cpa_dashboard_table GROUP BY date ORDER BY date`,
+            results: dailyData,
+            rowCount: dailyData.length
+        };
+    }
+    
+    cpaQueryCampaign(params) {
+        // Generate campaign-level CPA aggregation
+        const campaignData = {};
+        
+        this.data.campaignSpend.forEach(spend => {
+            const campaign = spend.campaign_name;
+            if (!campaignData[campaign]) {
+                campaignData[campaign] = { spend: 0, activations: 0 };
+            }
+            campaignData[campaign].spend += spend.spend;
+        });
+        
+        // Add activations from attribution results
+        this.data.attributionResults.forEach(result => {
+            const campaign = result.last_touch_campaign_name || 'Unknown';
+            if (campaignData[campaign]) {
+                campaignData[campaign].activations += 1;
+            }
+        });
+        
+        const results = Object.entries(campaignData).map(([campaign, data]) => ({
+            campaign_name: campaign,
+            spend: Math.round(data.spend),
+            activations: data.activations,
+            cpa: data.activations > 0 ? Math.round(data.spend / data.activations) : null
+        }));
+        
+        return {
+            query: `SELECT campaign_name, SUM(total_spend) as spend, SUM(activations) as activations,
+                   SUM(total_spend)/NULLIF(SUM(activations),0) as cpa
+                   FROM cpa_dashboard_table GROUP BY campaign_name ORDER BY spend DESC`,
+            results: results,
+            rowCount: results.length
+        };
+    }
+    
+    cpaPreparationQuery(params) {
+        const limit = params.limit || 20;
+        const prepData = [];
+        
+        // Generate atomic-level CPA preparation data
+        this.data.campaignSpend.slice(0, limit).forEach(spend => {
+            const activations = Math.floor(Math.random() * 3); // Simulate activations
+            prepData.push({
+                date: spend.date,
+                source: spend.source,
+                campaign_id: spend.campaign_id,
+                campaign_name: spend.campaign_name,
+                adset_id: spend.adset_id,
+                adset_name: spend.adset_name,
+                ad_id: spend.ad_id,
+                ad_name: spend.ad_name,
+                total_spend: Math.round(spend.spend),
+                activations: activations,
+                cost_per_activation: activations > 0 ? Math.round(spend.spend / activations) : null
+            });
+        });
+        
+        return {
+            query: `SELECT date, source, campaign_id, campaign_name, adset_id, adset_name,
+                   ad_id, ad_name, total_spend, activations,
+                   CASE WHEN activations > 0 THEN ROUND(total_spend / activations, 2) ELSE NULL END as cost_per_activation
+                   FROM cpa_dashboard_table ORDER BY date DESC LIMIT ${limit}`,
+            results: prepData,
+            rowCount: prepData.length
+        };
+    }
+}
+
 // Initialize mock data
 function initializeMockData() {
     // Generate sessions data - Guardio-specific
@@ -128,10 +374,154 @@ function initializeMockData() {
             cost_per_activation: hasMarketing ? Math.random() * 100 + 20 : null
         });
     });
+    
+    // Initialize SQL Engine
+    window.sqlEngine = new MockSQLEngine(mockData);
 }
 
 // Chart configurations
 let cpaChart, spendChart, performanceChart;
+
+// Query Execution Interface
+function executeCustomQuery(queryType, customParams = {}) {
+    try {
+        const queryResult = window.sqlEngine.executeQuery(queryType, customParams);
+        
+        // Create modal or popup to show query results
+        showQueryResultsModal(queryResult, queryType);
+        
+    } catch (error) {
+        console.error('Query execution error:', error);
+        alert(`Query execution failed: ${error.message}`);
+    }
+}
+
+function showQueryResultsModal(queryResult, queryType) {
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'query-results-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 Query Results: ${queryType.replace('_', ' ').toUpperCase()}</h3>
+                <button class="close-modal" onclick="closeQueryModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="query-info">
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution: <strong>~${Math.floor(Math.random() * 5) + 1}ms</strong></span>
+                        <span class="stat">💾 Data source: <strong>Mock Database</strong></span>
+                    </div>
+                </div>
+                <div class="query-display">
+                    <h4>SQL Query:</h4>
+                    <pre><code>${queryResult.query}</code></pre>
+                </div>
+                <div class="results-display">
+                    <h4>Results (${queryResult.rowCount} rows):</h4>
+                    <div class="results-table-container">
+                        ${generateResultsTable(queryResult.results)}
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="downloadQueryResults('${queryType}')">📥 Download CSV</button>
+                    <button class="btn btn-secondary" onclick="closeQueryModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listener to close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeQueryModal();
+        }
+    });
+}
+
+function generateResultsTable(results) {
+    if (!results || results.length === 0) {
+        return '<p>No results found.</p>';
+    }
+    
+    const headers = Object.keys(results[0]);
+    
+    let html = `
+        <table class="query-results-table">
+            <thead>
+                <tr>
+                    ${headers.map(header => `<th>${header.replace('_', ' ').toUpperCase()}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    results.forEach(row => {
+        html += '<tr>';
+        headers.forEach(header => {
+            let value = row[header];
+            
+            // Format dates
+            if (value instanceof Date) {
+                value = value.toLocaleDateString();
+            } else if (typeof value === 'string' && value.includes('T') && value.includes('Z')) {
+                value = new Date(value).toLocaleDateString();
+            } else if (value === null || value === undefined) {
+                value = 'NULL';
+            }
+            
+            html += `<td>${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    return html;
+}
+
+function closeQueryModal() {
+    const modal = document.querySelector('.query-results-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function downloadQueryResults(queryType) {
+    const queryResult = window.sqlEngine.executeQuery(queryType, { limit: 1000 });
+    
+    // Convert to CSV
+    const headers = Object.keys(queryResult.results[0]);
+    let csv = headers.join(',') + '\n';
+    
+    queryResult.results.forEach(row => {
+        const values = headers.map(header => {
+            let value = row[header];
+            if (value instanceof Date) {
+                value = value.toISOString();
+            } else if (value === null || value === undefined) {
+                value = '';
+            }
+            // Escape commas and quotes
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                value = `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        });
+        csv += values.join(',') + '\n';
+    });
+    
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${queryType}_results_${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
 
 // Initialize charts
 function initializeCharts() {
@@ -372,20 +762,29 @@ function runStep(stepNumber) {
 }
 
 function getStep1Results() {
-    const sampleSessions = mockData.sessions.slice(0, 8);
+    const queryResult = window.sqlEngine.executeQuery('parse_sessions', { limit: 8 });
     
     let html = `
         <div class="step-result">
             <h4>Step 1: Parse UTM Parameters from referrer_url</h4>
             <div class="step-description">
                 <p>Extract marketing source, campaign, adset, and ad parameters from URLs using REGEXP_EXTRACT.</p>
-                <code>CASE WHEN referrer_url LIKE '%utm_source=%' THEN REGEXP_EXTRACT(referrer_url, r'utm_source=([^&]+)') ELSE 'organic' END</code>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~2ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('parse_sessions')">📝 Execute Query</button>
+                    </div>
+                </div>
             </div>
             <table class="results-table-inner">
                 <thead>
                     <tr>
                         <th>Session ID</th>
                         <th>User ID</th>
+                        <th>Device Type</th>
                         <th>Referrer URL</th>
                         <th>Parsed Source</th>
                         <th>Campaign ID</th>
@@ -395,20 +794,19 @@ function getStep1Results() {
                 <tbody>
     `;
     
-    sampleSessions.forEach(session => {
+    queryResult.results.forEach(session => {
         const shortUrl = session.referrer_url.length > 50 ? 
             session.referrer_url.substring(0, 50) + '...' : 
             session.referrer_url;
-        
-        const parsed = parseSourceFromUrl(session.referrer_url);
         
         html += `
             <tr>
                 <td>${session.session_id}</td>
                 <td>${session.user_id}</td>
+                <td>${session.device_type}</td>
                 <td title="${session.referrer_url}">${shortUrl}</td>
-                <td><span class="source-${parsed.source}">${parsed.source}</span></td>
-                <td>${parsed.campaign_id || 'NULL'}</td>
+                <td><span class="source-${session.source}">${session.source}</span></td>
+                <td>${session.campaign_id || 'NULL'}</td>
                 <td>${session.is_activated ? 'Yes' : 'No'}</td>
             </tr>
         `;
@@ -419,14 +817,22 @@ function getStep1Results() {
 }
 
 function getStep2Results() {
-    const activatedSessions = mockData.sessions.filter(s => s.is_activated === 1).slice(0, 6);
+    const queryResult = window.sqlEngine.executeQuery('activated_users', { limit: 6 });
     
     let html = `
         <div class="step-result">
             <h4>Step 2: Identify Activated Users & Attribution Windows</h4>
             <div class="step-description">
                 <p>Find users who activated (is_activated = 1) and calculate their 14-day attribution window.</p>
-                <code>DATE_SUB(DATE(session_start_time), INTERVAL 14 DAY) AS window_start_date</code>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~1ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('activated_users')">📝 Execute Query</button>
+                    </div>
+                </div>
             </div>
             <table class="results-table-inner">
                 <thead>
@@ -440,14 +846,13 @@ function getStep2Results() {
                 <tbody>
     `;
     
-    activatedSessions.forEach(session => {
-        const activationDate = new Date(session.session_start_time);
-        const windowStart = new Date(activationDate);
-        windowStart.setDate(windowStart.getDate() - 14);
+    queryResult.results.forEach(result => {
+        const activationDate = new Date(result.activation_session_start_time);
+        const windowStart = new Date(result.window_start_date);
         
         html += `
             <tr>
-                <td>${session.user_id}</td>
+                <td>${result.user_id}</td>
                 <td>${activationDate.toLocaleDateString()}</td>
                 <td>${windowStart.toLocaleDateString()}</td>
                 <td>${activationDate.toLocaleDateString()}</td>
@@ -460,14 +865,22 @@ function getStep2Results() {
 }
 
 function getStep3Results() {
-    const sampleData = mockData.sessions.slice(0, 10);
+    const queryResult = window.sqlEngine.executeQuery('attribution_window', { limit: 10 });
     
     let html = `
         <div class="step-result">
             <h4>Step 3: Attribution Window Analysis</h4>
             <div class="step-description">
                 <p>For each activated user, collect all their sessions within the 14-day attribution window.</p>
-                <code>WHERE DATE(ps.session_start_time) BETWEEN au.window_start_date AND au.activation_date</code>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~3ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('attribution_window')">📝 Execute Query</button>
+                    </div>
+                </div>
             </div>
             <table class="results-table-inner">
                 <thead>
@@ -483,19 +896,15 @@ function getStep3Results() {
                 <tbody>
     `;
     
-    sampleData.forEach((session, index) => {
-        const daysBefore = Math.floor(Math.random() * 14);
-        const parsed = parseSourceFromUrl(session.referrer_url);
-        const touchType = parsed.source === 'organic' ? 'Organic' : 'Marketing';
-        
+    queryResult.results.forEach(result => {
         html += `
             <tr>
-                <td>${session.user_id}</td>
-                <td>${new Date(session.session_start_time).toLocaleDateString()}</td>
-                <td><span class="source-${parsed.source}">${parsed.source}</span></td>
-                <td>${parsed.campaign_id || 'N/A'}</td>
-                <td>${daysBefore}</td>
-                <td><span class="touch-${touchType.toLowerCase()}">${touchType}</span></td>
+                <td>${result.user_id}</td>
+                <td>${new Date(result.session_start_time).toLocaleDateString()}</td>
+                <td><span class="source-${result.source}">${result.source}</span></td>
+                <td>${result.campaign_id || 'N/A'}</td>
+                <td>${result.days_before_activation}</td>
+                <td><span class="touch-${result.touch_type.toLowerCase()}">${result.touch_type}</span></td>
             </tr>
         `;
     });
