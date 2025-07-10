@@ -2927,28 +2927,64 @@ function showCompleteAttributionResults() {
                 </div>
             </div>
             
-            <div style="overflow-x: auto;">
-                <table>
+            <div class="attribution-table-container">
+                <table id="attribution-results-table" class="sortable-table">
                     <thead>
                         <tr>
-                            <th>user_id</th>
-                            <th>activation_session_start_time</th>
-                            <th>first_touch_attribution_time</th>
-                            <th>first_touch_attribution_source</th>
-                            <th>first_touch_campaign_id</th>
-                            <th>first_touch_campaign_name</th>
-                            <th>first_touch_adset_id</th>
-                            <th>first_touch_adset_name</th>
-                            <th>first_touch_ad_id</th>
-                            <th>first_touch_ad_name</th>
-                            <th>last_touch_attribution_date</th>
-                            <th>last_touch_attribution_source</th>
-                            <th>last_touch_campaign_id</th>
-                            <th>last_touch_campaign_name</th>
-                            <th>last_touch_adset_id</th>
-                            <th>last_touch_adset_name</th>
-                            <th>last_touch_ad_id</th>
-                            <th>last_touch_ad_name</th>
+                            <th onclick="sortAttributionTable('user_id')" class="sortable-header">
+                                user_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('activation_session_start_time')" class="sortable-header">
+                                activation_session_start_time <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_attribution_time')" class="sortable-header">
+                                first_touch_attribution_time <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_attribution_source')" class="sortable-header">
+                                first_touch_attribution_source <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_campaign_id')" class="sortable-header">
+                                first_touch_campaign_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_campaign_name')" class="sortable-header">
+                                first_touch_campaign_name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_adset_id')" class="sortable-header">
+                                first_touch_adset_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_adset_name')" class="sortable-header">
+                                first_touch_adset_name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_ad_id')" class="sortable-header">
+                                first_touch_ad_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('first_touch_ad_name')" class="sortable-header">
+                                first_touch_ad_name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_attribution_date')" class="sortable-header">
+                                last_touch_attribution_date <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_attribution_source')" class="sortable-header">
+                                last_touch_attribution_source <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_campaign_id')" class="sortable-header">
+                                last_touch_campaign_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_campaign_name')" class="sortable-header">
+                                last_touch_campaign_name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_adset_id')" class="sortable-header">
+                                last_touch_adset_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_adset_name')" class="sortable-header">
+                                last_touch_adset_name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_ad_id')" class="sortable-header">
+                                last_touch_ad_id <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortAttributionTable('last_touch_ad_name')" class="sortable-header">
+                                last_touch_ad_name <span class="sort-indicator">↕️</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3016,25 +3052,55 @@ function showCompleteCPATable() {
                 </div>
             </div>
             
-            <div style="overflow-x: auto;">
-                <table>
+            <div class="attribution-table-container">
+                <table id="cpa-results-table" class="sortable-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Source</th>
-                            <th>Campaign ID</th>
-                            <th>Campaign Name</th>
-                            <th>Adset ID</th>
-                            <th>Adset Name</th>
-                            <th>Ad ID</th>
-                            <th>Ad Name</th>
-                            <th>Total Spend</th>
-                            <th>Activations</th>
-                            <th>Cost Per Activation</th>
-                            <th>Spend Share %</th>
-                            <th>Activation Share %</th>
-                            <th>Cumulative Spend</th>
-                            <th>Cumulative Activations</th>
+                            <th onclick="sortCPATable('date')" class="sortable-header">
+                                Date <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('source')" class="sortable-header">
+                                Source <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('campaign_id')" class="sortable-header">
+                                Campaign ID <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('campaign_name')" class="sortable-header">
+                                Campaign Name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('adset_id')" class="sortable-header">
+                                Adset ID <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('adset_name')" class="sortable-header">
+                                Adset Name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('ad_id')" class="sortable-header">
+                                Ad ID <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('ad_name')" class="sortable-header">
+                                Ad Name <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('total_spend')" class="sortable-header">
+                                Total Spend <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('activations')" class="sortable-header">
+                                Activations <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('cost_per_activation')" class="sortable-header">
+                                Cost Per Activation <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('spend_share_pct')" class="sortable-header">
+                                Spend Share % <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('activation_share_pct')" class="sortable-header">
+                                Activation Share % <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('cumulative_spend')" class="sortable-header">
+                                Cumulative Spend <span class="sort-indicator">↕️</span>
+                            </th>
+                            <th onclick="sortCPATable('cumulative_activations')" class="sortable-header">
+                                Cumulative Activations <span class="sort-indicator">↕️</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3127,7 +3193,159 @@ window.runStep = runStep;
 window.updateDashboard = updateDashboard;
 window.showCPAQuerySteps = showCPAQuerySteps;
 window.showOptimizationStep = showOptimizationStep;
+// Global variables for sorting state
+let attributionSortState = { column: null, direction: 'asc' };
+let cpaSortState = { column: null, direction: 'asc' };
+
+// Sorting function for attribution table
+function sortAttributionTable(column) {
+    // Toggle sort direction if same column
+    if (attributionSortState.column === column) {
+        attributionSortState.direction = attributionSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        attributionSortState.column = column;
+        attributionSortState.direction = 'asc';
+    }
+    
+    // Get current data and sort it
+    const data = generateCompleteAttributionResults();
+    
+    data.sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+        
+        // Handle null values
+        if (aVal === null || aVal === undefined) aVal = '';
+        if (bVal === null || bVal === undefined) bVal = '';
+        
+        // Handle dates
+        if (aVal instanceof Date && bVal instanceof Date) {
+            return attributionSortState.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        
+        // Handle strings and numbers
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        
+        if (aVal < bVal) return attributionSortState.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return attributionSortState.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Update the table with sorted data
+    const tbody = document.querySelector('#attribution-results-table tbody');
+    if (tbody) {
+        tbody.innerHTML = data.map(row => `
+            <tr>
+                <td><span class="user-id">${row.user_id}</span></td>
+                <td class="timestamp">${row.activation_session_start_time.toLocaleString()}</td>
+                <td class="timestamp">${row.first_touch_attribution_time.toLocaleString()}</td>
+                <td><span class="source-${row.first_touch_attribution_source}">${row.first_touch_attribution_source}</span></td>
+                <td class="campaign-cell">${row.first_touch_campaign_id || '<span class="null-cell">NULL</span>'}</td>
+                <td class="campaign-cell">${row.first_touch_campaign_name || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.first_touch_adset_id || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.first_touch_adset_name || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.first_touch_ad_id || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.first_touch_ad_name || '<span class="null-cell">NULL</span>'}</td>
+                <td class="timestamp">${row.last_touch_attribution_date.toLocaleString()}</td>
+                <td><span class="source-${row.last_touch_attribution_source}">${row.last_touch_attribution_source}</span></td>
+                <td class="campaign-cell">${row.last_touch_campaign_id || '<span class="null-cell">NULL</span>'}</td>
+                <td class="campaign-cell">${row.last_touch_campaign_name || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.last_touch_adset_id || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.last_touch_adset_name || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.last_touch_ad_id || '<span class="null-cell">NULL</span>'}</td>
+                <td>${row.last_touch_ad_name || '<span class="null-cell">NULL</span>'}</td>
+            </tr>
+        `).join('');
+    }
+    
+    // Update sort indicators
+    updateSortIndicators('attribution-results-table', column, attributionSortState.direction);
+}
+
+// Update sort indicators
+function updateSortIndicators(tableId, activeColumn, direction) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    
+    // Reset all indicators
+    table.querySelectorAll('.sort-indicator').forEach(indicator => {
+        indicator.textContent = '↕️';
+    });
+    
+    // Set active indicator
+    const activeHeader = table.querySelector(`th[onclick*="${activeColumn}"] .sort-indicator`);
+    if (activeHeader) {
+        activeHeader.textContent = direction === 'asc' ? '🔼' : '🔽';
+    }
+}
+
+// Sorting function for CPA table
+function sortCPATable(column) {
+    // Toggle sort direction if same column
+    if (cpaSortState.column === column) {
+        cpaSortState.direction = cpaSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        cpaSortState.column = column;
+        cpaSortState.direction = 'asc';
+    }
+    
+    // Get current data and sort it
+    const data = generateCompleteCPAPreparationTable();
+    
+    data.sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+        
+        // Handle null values
+        if (aVal === null || aVal === undefined) aVal = '';
+        if (bVal === null || bVal === undefined) bVal = '';
+        
+        // Handle numeric values
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return cpaSortState.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        
+        // Handle strings
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        
+        if (aVal < bVal) return cpaSortState.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return cpaSortState.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Update the table with sorted data
+    const tbody = document.querySelector('#cpa-results-table tbody');
+    if (tbody) {
+        tbody.innerHTML = data.slice(0, 100).map(row => `
+            <tr>
+                <td>${row.date}</td>
+                <td><span class="source-${row.source}">${row.source}</span></td>
+                <td class="campaign-cell">${row.campaign_id}</td>
+                <td class="campaign-cell">${row.campaign_name}</td>
+                <td>${row.adset_id}</td>
+                <td>${row.adset_name}</td>
+                <td>${row.ad_id}</td>
+                <td>${row.ad_name}</td>
+                <td class="metric-cell">$${row.total_spend}</td>
+                <td class="metric-cell">${row.activations}</td>
+                <td class="cpa-cell">${row.cost_per_activation ? '$' + row.cost_per_activation.toFixed(2) : '<span class="null-cell">NULL</span>'}</td>
+                <td class="metric-cell">${row.spend_share_pct.toFixed(1)}%</td>
+                <td class="metric-cell">${row.activation_share_pct.toFixed(1)}%</td>
+                <td class="metric-cell">$${row.cumulative_spend}</td>
+                <td class="metric-cell">${row.cumulative_activations}</td>
+            </tr>
+        `).join('');
+    }
+    
+    // Update sort indicators
+    updateSortIndicators('cpa-results-table', column, cpaSortState.direction);
+}
+
 window.showCompleteAttributionResults = showCompleteAttributionResults;
 window.showCompleteCPATable = showCompleteCPATable;
+window.sortAttributionTable = sortAttributionTable;
+window.sortCPATable = sortCPATable;
 window.downloadAttributionCSV = downloadAttributionCSV;
 window.downloadCPACSV = downloadCPACSV;
