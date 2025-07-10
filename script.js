@@ -262,6 +262,77 @@ class MockSQLEngine {
             rowCount: prepData.length
         };
     }
+    
+    cpaQuerySource(params) {
+        // Generate source-level CPA aggregation
+        const sourceData = {};
+        
+        this.data.campaignSpend.forEach(spend => {
+            const source = spend.source;
+            if (!sourceData[source]) {
+                sourceData[source] = { spend: 0, activations: 0 };
+            }
+            sourceData[source].spend += spend.spend;
+        });
+        
+        // Add activations from attribution results
+        this.data.attributionResults.forEach(result => {
+            const source = result.last_touch_attribution_source || 'organic';
+            if (sourceData[source]) {
+                sourceData[source].activations += 1;
+            }
+        });
+        
+        const results = Object.entries(sourceData).map(([source, data]) => ({
+            source: source,
+            spend: Math.round(data.spend),
+            activations: data.activations,
+            cpa: data.activations > 0 ? Math.round(data.spend / data.activations) : null
+        }));
+        
+        return {
+            query: `SELECT source, SUM(total_spend) as spend, SUM(activations) as activations,
+                   SUM(total_spend)/NULLIF(SUM(activations),0) as cpa
+                   FROM cpa_dashboard_table GROUP BY source ORDER BY spend DESC`,
+            results: results,
+            rowCount: results.length
+        };
+    }
+    
+    cpaQueryAd(params) {
+        const limit = params.limit || 10;
+        const adData = {};
+        
+        this.data.campaignSpend.slice(0, limit * 2).forEach(spend => {
+            const adKey = `${spend.ad_name}|${spend.campaign_name}`;
+            if (!adData[adKey]) {
+                adData[adKey] = { 
+                    ad_name: spend.ad_name,
+                    campaign_name: spend.campaign_name,
+                    spend: 0, 
+                    activations: 0 
+                };
+            }
+            adData[adKey].spend += spend.spend;
+            adData[adKey].activations += Math.floor(Math.random() * 2); // Simulate activations
+        });
+        
+        const results = Object.values(adData).slice(0, limit).map(data => ({
+            ad_name: data.ad_name,
+            campaign_name: data.campaign_name,
+            spend: Math.round(data.spend),
+            activations: data.activations,
+            cpa: data.activations > 0 ? Math.round(data.spend / data.activations) : null
+        }));
+        
+        return {
+            query: `SELECT ad_name, campaign_name, SUM(total_spend) as spend, SUM(activations) as activations,
+                   SUM(total_spend)/NULLIF(SUM(activations),0) as cpa
+                   FROM cpa_dashboard_table GROUP BY ad_name, campaign_name ORDER BY spend DESC LIMIT ${limit}`,
+            results: results,
+            rowCount: results.length
+        };
+    }
 }
 
 // Initialize mock data
@@ -914,14 +985,22 @@ function getStep3Results() {
 }
 
 function getStep4Results() {
-    const sampleResults = mockData.attributionResults.slice(0, 6);
+    const queryResult = window.sqlEngine.executeQuery('final_attribution', { limit: 6 });
     
     let html = `
         <div class="step-result">
             <h4>Step 4: Final Attribution Assignment</h4>
             <div class="step-description">
                 <p>Apply attribution logic: If user has ANY marketing touchpoints → use marketing for first/last touch, otherwise organic.</p>
-                <code>CASE WHEN uts.marketing_touchpoints > 0 THEN mt.first_touch_source ELSE 'organic' END</code>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~2ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('final_attribution')">📝 Execute Query</button>
+                    </div>
+                </div>
             </div>
             <table class="results-table-inner">
                 <thead>
@@ -937,17 +1016,15 @@ function getStep4Results() {
                 <tbody>
     `;
     
-    sampleResults.forEach(result => {
-        const hasMarketing = result.first_touch_attribution_source !== 'organic';
-        
+    queryResult.results.forEach(result => {
         html += `
             <tr>
                 <td>${result.user_id}</td>
-                <td><span class="source-${result.first_touch_attribution_source}">${result.first_touch_attribution_source}</span></td>
-                <td>${result.first_touch_campaign_id || 'N/A'}</td>
-                <td><span class="source-${result.last_touch_attribution_source}">${result.last_touch_attribution_source}</span></td>
-                <td>${result.last_touch_campaign_id || 'N/A'}</td>
-                <td>${hasMarketing ? 'Yes' : 'No'}</td>
+                <td><span class="source-${result.first_touch_source}">${result.first_touch_source}</span></td>
+                <td>${result.first_touch_campaign || 'N/A'}</td>
+                <td><span class="source-${result.last_touch_source}">${result.last_touch_source}</span></td>
+                <td>${result.last_touch_campaign || 'N/A'}</td>
+                <td>${result.marketing_touchpoints}</td>
             </tr>
         `;
     });
@@ -957,13 +1034,22 @@ function getStep4Results() {
 }
 
 function getStep5Results() {
-    const completeResults = mockData.attributionResults.slice(0, 8);
+    const queryResult = window.sqlEngine.executeQuery('complete_attribution', { limit: 8 });
     
     let html = `
         <div class="step-result">
             <h4>Complete Attribution Results</h4>
             <div class="step-description">
                 <p>Final output table with all attribution data ready for CPA calculations and reporting.</p>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~1ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('complete_attribution')">📝 Execute Query</button>
+                    </div>
+                </div>
             </div>
             <table class="results-table-inner">
                 <thead>
@@ -971,26 +1057,23 @@ function getStep5Results() {
                         <th>User ID</th>
                         <th>Activation Time</th>
                         <th>First Touch Source</th>
+                        <th>First Touch Campaign</th>
                         <th>Last Touch Source</th>
-                        <th>CPA</th>
-                        <th>Attribution Journey</th>
+                        <th>Last Touch Campaign</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
     
-    completeResults.forEach(result => {
-        const journey = result.first_touch_attribution_source === result.last_touch_attribution_source ? 
-            'Single Touch' : 'Multi Touch';
-        
+    queryResult.results.forEach(result => {
         html += `
             <tr>
                 <td>${result.user_id}</td>
                 <td>${new Date(result.activation_session_start_time).toLocaleDateString()}</td>
                 <td><span class="source-${result.first_touch_attribution_source}">${result.first_touch_attribution_source}</span></td>
+                <td>${result.first_touch_campaign_id || 'N/A'}</td>
                 <td><span class="source-${result.last_touch_attribution_source}">${result.last_touch_attribution_source}</span></td>
-                <td>${result.cost_per_activation ? '$' + result.cost_per_activation.toFixed(2) : 'N/A'}</td>
-                <td><span class="journey-${journey.toLowerCase().replace(' ', '-')}">${journey}</span></td>
+                <td>${result.last_touch_campaign_id || 'N/A'}</td>
             </tr>
         `;
     });
@@ -1003,7 +1086,7 @@ function getStep5Results() {
 function updateDashboard() {
     const granularity = document.getElementById('granularity-select').value;
     
-    // Show query results first
+    // Show query results using SQL engine
     showCPAQueryResults(granularity);
     
     // Update CPA chart based on granularity
@@ -1021,25 +1104,149 @@ function showCPAQueryResults(granularity) {
     resultsDiv.innerHTML = '<div class="loading">Running CPA query...</div>';
     
     setTimeout(() => {
-        let queryHTML = '';
+        let queryResult;
+        let queryType;
         
         switch(granularity) {
             case 'daily':
-                queryHTML = getDailyCPAResults();
+                queryType = 'cpa_daily';
                 break;
             case 'campaign':
-                queryHTML = getCampaignCPAResults();
+                queryType = 'cpa_campaign';
                 break;
             case 'source':
-                queryHTML = getSourceCPAResults();
+                queryType = 'cpa_source';
                 break;
             case 'ad':
-                queryHTML = getAdCPAResults();
+                queryType = 'cpa_ad';
                 break;
         }
         
-        resultsDiv.innerHTML = queryHTML;
+        try {
+            queryResult = window.sqlEngine.executeQuery(queryType, { limit: 10 });
+            resultsDiv.innerHTML = getCPAQueryHTML(queryResult, granularity);
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error">Query execution failed: ${error.message}</div>`;
+        }
     }, 1000);
+}
+
+function getCPAQueryHTML(queryResult, granularity) {
+    const granularityName = granularity.charAt(0).toUpperCase() + granularity.slice(1);
+    
+    let html = `
+        <div class="cpa-query-result">
+            <div class="query-header">
+                <h4>${granularityName} CPA Analysis</h4>
+                <div class="sql-query-display">
+                    <h5>🔍 Executed SQL Query:</h5>
+                    <pre><code>${queryResult.query}</code></pre>
+                    <div class="query-stats">
+                        <span class="stat">📊 Rows returned: <strong>${queryResult.rowCount}</strong></span>
+                        <span class="stat">⏱️ Execution time: <strong>~${Math.floor(Math.random() * 5) + 1}ms</strong></span>
+                        <button class="execute-query-btn" onclick="executeCustomQuery('cpa_${granularity}')">📝 Execute Query</button>
+                    </div>
+                </div>
+            </div>
+            <div class="results-table-container">
+                <table class="results-table-inner">
+                    <thead>
+                        <tr>`;
+    
+    // Dynamic headers based on query results
+    if (queryResult.results.length > 0) {
+        const headers = Object.keys(queryResult.results[0]);
+        headers.forEach(header => {
+            html += `<th>${header.replace('_', ' ').toUpperCase()}</th>`;
+        });
+    }
+    
+    html += `
+                        </tr>
+                    </thead>
+                    <tbody>`;
+    
+    // Display results
+    queryResult.results.forEach(row => {
+        html += '<tr>';
+        Object.values(row).forEach(value => {
+            if (value === null || value === undefined) {
+                value = 'N/A';
+            } else if (typeof value === 'number' && value > 1000) {
+                value = value.toLocaleString();
+            } else if (value instanceof Date) {
+                value = value.toLocaleDateString();
+            }
+            
+            html += `<td>${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="business-logic-explanation">
+                <h5>💡 Business Logic Explanation:</h5>
+                <div class="insight-cards">
+                    ${getCPAInsights(queryResult, granularity)}
+                </div>
+            </div>
+        </div>`;
+    
+    return html;
+}
+
+function getCPAInsights(queryResult, granularity) {
+    const results = queryResult.results;
+    if (!results || results.length === 0) return '<p>No data available for insights.</p>';
+    
+    let insights = '';
+    
+    switch (granularity) {
+        case 'daily':
+            const avgCPA = results.reduce((sum, row) => sum + (row.cpa || 0), 0) / results.length;
+            insights = `
+                <div class="insight-card">
+                    <h6>📈 Daily Performance Trend</h6>
+                    <p>Average CPA: <strong>$${avgCPA.toFixed(2)}</strong></p>
+                    <p>Track daily fluctuations to identify optimal spend timing and budget allocation patterns.</p>
+                </div>`;
+            break;
+            
+        case 'campaign':
+            const bestCampaign = results.filter(r => r.cpa).sort((a, b) => a.cpa - b.cpa)[0];
+            insights = `
+                <div class="insight-card">
+                    <h6>🏆 Campaign Performance</h6>
+                    <p>Best performing: <strong>${bestCampaign?.campaign_name || 'N/A'}</strong> (CPA: $${bestCampaign?.cpa || 'N/A'})</p>
+                    <p>Focus budget on high-performing campaigns and pause or optimize underperformers.</p>
+                </div>`;
+            break;
+            
+        case 'source':
+            const topSource = results.filter(r => r.cpa).sort((a, b) => a.cpa - b.cpa)[0];
+            insights = `
+                <div class="insight-card">
+                    <h6>🎯 Source Optimization</h6>
+                    <p>Top source: <strong>${topSource?.source || 'N/A'}</strong> (CPA: $${topSource?.cpa || 'N/A'})</p>
+                    <p>Cybersecurity publications often have higher intent users and better conversion rates.</p>
+                </div>`;
+            break;
+            
+        case 'ad':
+            const topAd = results.filter(r => r.cpa).sort((a, b) => a.cpa - b.cpa)[0];
+            insights = `
+                <div class="insight-card">
+                    <h6>🎨 Creative Performance</h6>
+                    <p>Best ad: <strong>${topAd?.ad_name || 'N/A'}</strong></p>
+                    <p>Video demos vs. banner ads vs. CTA buttons for threat detection show different performance.</p>
+                </div>`;
+            break;
+    }
+    
+    return insights;
 }
 
 function getDailyCPAResults() {
@@ -1490,6 +1697,64 @@ function generateAdCPAData() {
 }
 
 function showCPAQuerySteps() {
+    const queryResult = window.sqlEngine.executeQuery('cpa_preparation', { limit: 20 });
+    
+    const modal = document.createElement('div');
+    modal.className = 'query-results-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 CPA Dashboard Preparation Query Steps</h3>
+                <button class="close-modal" onclick="closeQueryModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="query-info">
+                    <h4>Step-by-Step CPA Table Preparation</h4>
+                    <p>This query creates the atomic-level preparation table that supports all CPA dashboard granularities.</p>
+                </div>
+                <div class="query-display">
+                    <h4>Complete SQL Query:</h4>
+                    <pre><code>${queryResult.query}</code></pre>
+                </div>
+                <div class="results-display">
+                    <h4>Preparation Table Sample (${queryResult.rowCount} rows):</h4>
+                    <div class="results-table-container">
+                        ${generateResultsTable(queryResult.results)}
+                    </div>
+                </div>
+                <div class="business-logic-explanation">
+                    <h5>💡 Why Atomic Granularity?</h5>
+                    <div class="insight-cards">
+                        <div class="insight-card">
+                            <h6>🎯 Maximum Flexibility</h6>
+                            <p>Store data at the finest level (date + source + campaign + adset + ad) to support any aggregation level.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h6>⚡ Performance Optimization</h6>
+                            <p>Pre-calculated metrics eliminate complex joins in dashboard queries.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h6>🔄 Single Source of Truth</h6>
+                            <p>One table powers all dashboard views: daily, campaign, source, and ad-level analytics.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="downloadQueryResults('cpa_preparation')">📥 Download Full Table</button>
+                    <button class="btn btn-secondary" onclick="closeQueryModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeQueryModal();
+        }
+    });
+}
     const resultsDiv = document.getElementById('cpa-query-results');
     if (!resultsDiv) return;
     
