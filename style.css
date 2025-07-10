@@ -1335,7 +1335,7 @@ body {
 .sortable-table {
     width: max-content;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     background: white;
     table-layout: auto;
 }
@@ -1344,15 +1344,16 @@ body {
 .complete-results-table td,
 .sortable-table th,
 .sortable-table td {
-    padding: 0.5rem;
+    padding: 0.3rem 0.5rem;
     text-align: left;
     border-bottom: 1px solid #e9ecef;
     word-wrap: break-word;
-    min-width: 120px;
-    max-width: 200px;
+    min-width: 80px;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 0.8rem;
 }
 
 .sortable-header {
@@ -1360,6 +1361,37 @@ body {
     user-select: none;
     transition: background-color 0.2s;
     position: relative;
+}
+
+/* Compact column sizing for attribution table */
+.sortable-table th:nth-child(1), /* user_id */
+.sortable-table td:nth-child(1) {
+    min-width: 60px;
+    max-width: 80px;
+}
+
+.sortable-table th:nth-child(5), /* campaign_id */
+.sortable-table th:nth-child(7), /* adset_id */
+.sortable-table th:nth-child(9), /* ad_id */
+.sortable-table th:nth-child(13), /* last_touch_campaign_id */
+.sortable-table th:nth-child(15), /* last_touch_adset_id */
+.sortable-table th:nth-child(17), /* last_touch_ad_id */
+.sortable-table td:nth-child(5),
+.sortable-table td:nth-child(7),
+.sortable-table td:nth-child(9),
+.sortable-table td:nth-child(13),
+.sortable-table td:nth-child(15),
+.sortable-table td:nth-child(17) {
+    min-width: 50px;
+    max-width: 80px;
+}
+
+.sortable-table th:nth-child(4), /* source */
+.sortable-table th:nth-child(12), /* last_touch_source */
+.sortable-table td:nth-child(4),
+.sortable-table td:nth-child(12) {
+    min-width: 60px;
+    max-width: 90px;
 }
 
 .sortable-header:hover {
