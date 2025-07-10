@@ -1085,16 +1085,19 @@ body {
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     max-width: 100%;
+    overflow-x: visible;
 }
 
 .attribution-table-container {
-    overflow-x: scroll;
+    overflow-x: scroll !important;
     overflow-y: visible;
-    max-width: 100%;
+    max-width: 100vw;
+    width: 100%;
     border: 1px solid #e9ecef;
     border-radius: 8px;
     margin-top: 1rem;
     -webkit-overflow-scrolling: touch;
+    display: block;
 }
 
 .attribution-table-container::-webkit-scrollbar {
@@ -1124,11 +1127,12 @@ body {
 
 .complete-results-table table,
 .sortable-table {
-    width: 100%;
-    border-collapse: collapse;
+    width: max-content;
     min-width: 1400px;
+    border-collapse: collapse;
     font-size: 0.85rem;
     background: white;
+    table-layout: fixed;
 }
 
 .complete-results-table th,
@@ -1139,7 +1143,9 @@ body {
     text-align: left;
     border-bottom: 1px solid #e9ecef;
     word-wrap: break-word;
-    max-width: 120px;
+    width: 100px;
+    min-width: 80px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
