@@ -2213,7 +2213,7 @@ body {
 /* Only apply height limit to actual table elements, not the container with insights */
 .attribution-table-container,
 .complete-results-container {
-    max-height: 500px;
+    max-height: 700px;
     overflow-y: auto;
 }
 
